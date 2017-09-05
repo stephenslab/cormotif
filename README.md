@@ -1,0 +1,2 @@
+# cormotif
+Correlation motif model.
