@@ -2,11 +2,13 @@
 title: "Simulation for Correlation Motif"
 author: "Zhiwei Ma"
 date: "8/30/2017"
-output: pdf_document
+output:
+  html_document:
+    toc: false
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
 ```
 
 ## Model framework
