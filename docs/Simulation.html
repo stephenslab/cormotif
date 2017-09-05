@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Zhiwei Ma" />
+
+
+<title>Simulation for Correlation Motif</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/readable.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 66px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+
+.section h2 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h3 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h4 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h5 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+.section h6 {
+  padding-top: 71px;
+  margin-top: -71px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">cormotif</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/stephenslab/cormotif">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Simulation for Correlation Motif</h1>
+<h4 class="author"><em>Zhiwei Ma</em></h4>
+<h4 class="date"><em>8/30/2017</em></h4>
+
+</div>
+
+
+<div id="model-framework" class="section level2">
+<h2>Model framework</h2>
+<p>The framework of Correlation Motif model is based on my write-up document and supplementary matrials by <span class="math inline">\(Wei\)</span> <span class="math inline">\(and\)</span> <span class="math inline">\(Ji\)</span> (2015). In <span class="math inline">\(Wei\)</span> <span class="math inline">\(and\)</span> <span class="math inline">\(Ji\)</span> (2015), they implemented an EM algorithm and introduced priors for both <span class="math inline">\(\pi\)</span> and <span class="math inline">\(Q\)</span>. As a result, their iterative formulas for new <span class="math inline">\(\pi\)</span> and new <span class="math inline">\(Q\)</span> are:</p>
+<span class="math display">\[\begin{eqnarray}
+\pi_k^{(t+1)} = \frac{\sum_{i=1}^n p_{ik}+1}{n+K} , \\
+q_{kr}^ {(t+1)}=\frac{\sum_{i=1}^n p_{ikr1}+1}{\sum_{i=1}^n p_{ik}+2}.
+\end{eqnarray}\]</span>
+<p>However, one can apply EM algorithm without introducing a prior and obtain a more interpretable formula:</p>
+<span class="math display">\[\begin{eqnarray}
+\pi_k^{(t+1)} = \frac{1}{n} \sum_{i=1}^n p_{ik}, \\
+q_{kr}^ {(t+1)}=\frac{\sum_{i=1}^n p_{ikr1}}{\sum_{i=1}^n p_{ik}}.
+\end{eqnarray}\]</span>
+<p>Here <span class="math inline">\(p_{ik}= Pr(z_i=k|X_i,\pi^{(t)}, Q^ {(t)})\)</span> is the posterior probability for gene <span class="math inline">\(i\)</span> belonging to class <span class="math inline">\(k\)</span>, and the mean of <span class="math inline">\(p_{ik}\)</span> over <span class="math inline">\(i\)</span> is a reasonable estimations for <span class="math inline">\(\pi_{k}\)</span>. The argument is similar for <span class="math inline">\(q_{kr}\)</span>. Thus, we could interpret the underlying meaning in our iterative formulas.</p>
+<p>In fact, since <span class="math inline">\(G\)</span> is relatively large and <span class="math inline">\(G \gg K\)</span>, the two formulas tend to give very similar results. We will illustrate this idea by implementing these two algorithms seperately on the same dataset: <span class="math inline">\(simudata2\)</span> in R package <span class="math inline">\(Cormotif\)</span>.</p>
+<p>Notice that right now we are using the model applying limma (<span class="math inline">\(Smyth\)</span>, 2004). The results with prior is</p>
+<pre class="r"><code>library(Cormotif)
+data(simudata2)
+exprs.simu2&lt;-as.matrix(simudata2[,2:25])
+data(simu2_groupid)
+data(simu2_compgroup)
+
+motif.fitted&lt;-cormotiffit(exprs.simu2,simu2_groupid,simu2_compgroup,
+                          K=1:5,max.iter=1000,BIC=TRUE)
+motif.fitted$bic
+plotIC(motif.fitted)
+plotMotif(motif.fitted)</code></pre>
+<p>The results without prior is</p>
+<pre class="r"><code>motif.fitted&lt;-cormotiffit_1(exprs.simu2,simu2_groupid,simu2_compgroup,K=1:5,max.iter=1000,BIC=TRUE)
+
+motif.fitted$bic
+plotIC(motif.fitted)
+plotMotif(motif.fitted)</code></pre>
+<p>The two methods do give very similar results. However in practice, it takes much less iterations for methods with prior to achieve its accuracy. Here we prefer to apply CorMotif with prior. In the rest of document, without specification, we apply CorMOtif with prior.</p>
+</div>
+<div id="simulation-based-on-limma" class="section level2">
+<h2>Simulation based on limma</h2>
+<p>We first duplicated several simulation from <span class="math inline">\(Wei\)</span> <span class="math inline">\(and\)</span> <span class="math inline">\(Ji\)</span> (2015), which was still based on limma.</p>
+<div id="simulation-1" class="section level3">
+<h3>Simulation 1</h3>
+<p>In simulation 1, we generated 10,000 genes and four studies according to the four different patterns: 100 genes were differentially expressed in all four studies (<span class="math inline">\(Y_i = [1,1,1,1]\)</span>); 400 genes were differential only in studies 1 and 2 (<span class="math inline">\(Y_i = [1,1,0,0]\)</span>); 400 genes were differential only in studies 2 and 3 (<span class="math inline">\(Y_i = [0,1,1,0]\)</span>); 9100 genes were non-differential (<span class="math inline">\(Y_i = [0,0,0,0]\)</span>). Each study had six samples: three cases and three controls. The variances <span class="math inline">\(\sigma_{ir}^2\)</span> were simulated from <span class="math inline">\(n_{0r}s_{0r}^2/\chi^2(n_{0r})\)</span>, where <span class="math inline">\(n_{0r}=4\)</span> and <span class="math inline">\(s_{0r}^2=0.02\)</span>. The expression values were generated using <span class="math inline">\(x_{irlj}\sim N(0,\sigma_{ir}^2)\)</span>. When <span class="math inline">\(y_{ir}=1\)</span>, drew <span class="math inline">\(\mu_{ir}\)</span> from <span class="math inline">\(N(0,16\sigma_{ir}^2)\)</span>, and <span class="math inline">\(\mu_{ir}\)</span> was added to the three cases.</p>
+<p>Notice that in <span class="math inline">\(Wei\)</span> <span class="math inline">\(and\)</span> <span class="math inline">\(Ji\)</span> (2015), they drew <span class="math inline">\(\mu_{ir}\)</span> from <span class="math inline">\(N(0,4\sigma_{ir}^2)\)</span>. I think it is a typo, since with this setting, the simulation results are quite unsatisfying and only two patterns were recognized. The reason for that is the difference between cases and controls will be minor if the variance is not large enough, which will weaken the pattern.</p>
+<pre class="r"><code>K = 4
+D = 4
+G = 10000
+pi0 = c(0.01,0.04,0.04,0.91)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,1,1,0)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=6*D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(1)
+for(g in 1:G){
+  for(d in 1:D){
+    sigma2 = 4*0.02/rchisq(1,4)
+    x = rnorm(6,0,sqrt(sigma2))
+    if(A[g,d]==1){
+      dx = rnorm(1,0,4*sqrt(sigma2))
+      x[1:3] = x[1:3]+dx
+    }
+    X[g,(6*d-5):(6*d)] = x
+  }
+}
+groupid = rep(1:8,each=3)
+compgroup = t(matrix(1:8,ncol=4))
+motif.fitted&lt;-cormotiffit(X,groupid,compgroup,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)</code></pre>
+<p>The result matches well with <span class="math inline">\(Wei\)</span> <span class="math inline">\(and\)</span> <span class="math inline">\(Ji\)</span> (2015).</p>
+</div>
+<div id="simulation-2" class="section level3">
+<h3>Simulation 2</h3>
+<p>In simulation 2, we generated 10,000 genes and four studies according to the four different patterns: 300 genes were differentially expressed in all four studies (<span class="math inline">\(Y_i = [1,1,1,1]\)</span>); 300 genes were differential only in studies 1 and 2 (<span class="math inline">\(Y_i = [1,1,0,0]\)</span>); 300 genes were differential only in studies 3 and 4 (<span class="math inline">\(Y_i = [0,0,1,1]\)</span>); 9100 genes were non-differential (<span class="math inline">\(Y_i = [0,0,0,0]\)</span>).</p>
+<pre class="r"><code>K = 4
+D = 4
+G = 10000
+pi0 = c(0.03,0.03,0.03,0.91)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,0,1,1)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=6*D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(2)
+for(g in 1:G){
+  for(d in 1:D){
+    sigma2 = 4*0.02/rchisq(1,4)
+    x = rnorm(6,0,sqrt(sigma2))
+    if(A[g,d]==1){
+      dx = rnorm(1,0,4*sqrt(sigma2))
+      x[1:3] = x[1:3]+dx
+    }
+    X[g,(6*d-5):(6*d)] = x
+  }
+}
+groupid = rep(1:8,each=3)
+compgroup = t(matrix(1:8,ncol=4))
+motif.fitted&lt;-cormotiffit(X,groupid,compgroup,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)</code></pre>
+<p>Then we could check if we change the proportion of four patterns to <span class="math inline">\(200:50:50:9700\)</span>.</p>
+<pre class="r"><code>K = 4
+D = 4
+G = 10000
+pi0 = c(0.02,0.005,0.005,0.97)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,0,1,1)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=6*D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(1)
+for(g in 1:G){
+  for(d in 1:D){
+    sigma2 = 4*0.02/rchisq(1,4)
+    x = rnorm(6,0,sqrt(sigma2))
+    if(A[g,d]==1){
+      dx = rnorm(1,0,4*sqrt(sigma2))
+      x[1:3] = x[1:3]+dx
+    }
+    X[g,(6*d-5):(6*d)] = x
+  }
+}
+groupid = rep(1:8,each=3)
+compgroup = t(matrix(1:8,ncol=4))
+motif.fitted&lt;-cormotiffit(X,groupid,compgroup,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)</code></pre>
+<p>We could find that the second and third pattern merged togethor, since their proportions were relatively small compared to the first and forth pattern.</p>
+</div>
+<div id="simulation-3" class="section level3">
+<h3>Simulation 3</h3>
+<p>In simulation 3, we generated 10,000 genes and eight studies according to the four different patterns: 200 genes were differentially expressed in all four studies (<span class="math inline">\(Y_i = [1,1,1,1,1,1,1,1]\)</span>); 200 genes were differential only in studies 1, 2, 3, 4 (<span class="math inline">\(Y_i = [1,1,1,1,0,0,0,0]\)</span>); 200 genes were differential only in studies 5, 6, 7, 8 (<span class="math inline">\(Y_i = [0,0,0,0,1,1,1,1]\)</span>); 200 genes were differential only in studies 3, 4, 5, 6 (<span class="math inline">\(Y_i = [0,0,1,1,1,1,0,0]\)</span>); 9200 genes were non-differential (<span class="math inline">\(Y_i = [0,0,0,0,0,0,0,0,0]\)</span>).</p>
+<pre class="r"><code>K = 5
+D = 8
+G = 10000
+pi0 = c(0.02,0.02,0.02,0.02,0.92)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1,1,1,1,1)
+q0[2,] = c(1,1,1,1,0,0,0,0)
+q0[3,] = c(0,0,0,0,1,1,1,1)
+q0[4,] = c(0,0,1,1,1,1,0,0)
+q0[5,] = c(0,0,0,0,0,0,0,0)
+X = matrix(0,nrow=G,ncol=6*D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(3)
+for(g in 1:G){
+  for(d in 1:D){
+    sigma2 = 4*0.02/rchisq(1,4)
+    x = rnorm(6,0,sqrt(sigma2))
+    if(A[g,d]==1){
+      dx = rnorm(1,0,4*sqrt(sigma2))
+      x[1:3] = x[1:3]+dx
+    }
+    X[g,(6*d-5):(6*d)] = x
+  }
+}
+groupid = rep(1:16,each=3)
+compgroup = t(matrix(1:16,nrow=2))
+motif.fitted&lt;-cormotiffit(X,groupid,compgroup,K=1:6,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)</code></pre>
+<p>CorMotif tends to merge weaker patterns with small proportion. Just as <span class="math inline">\(Wei\)</span> <span class="math inline">\(and\)</span> <span class="math inline">\(Ji\)</span> (2015) states, correlation motifs only represent a parsimonious representation of the correlation structure supported by the available data. On the other hand, the two stage method may also be blame. Adding <span class="math inline">\(limma\)</span> structure can increase inaccuracy for estimation. In the next section, we will generate <span class="math inline">\(x_{ir}\)</span> directly from a Gaussian distribution. In fact, any distribution can be applied under our framework. In addition, we can also estimate the parameters for Gaussian distribution.</p>
+</div>
+</div>
+<div id="cormotif-based-on-gaussian-model" class="section level2">
+<h2>CorMotif based on Gaussian model</h2>
+<p>Let</p>
+<span class="math display">\[\begin{eqnarray*}
+f_{r0}(x_{ir}) &amp;=&amp; N(x_{ir};0,1), \\
+f_{r1}(x_{ir}) &amp;=&amp; N(x_{ir};0,1+\sigma_r^2).
+\end{eqnarray*}\]</span>
+<p>First, we checked the performance of CorMotif by assuming we know <span class="math inline">\(\sigma^2\)</span> exactly. Then we dealed with the situation where we were given no information about <span class="math inline">\(\sigma^2\)</span>. Apply</p>
+<p><span class="math display">\[\sigma_r^{2(t+1)}= \frac{\sum_{i=1}^n \sum_{k=1}^K (x_{ir}^2-1)p_{ikr1}}{\sum_{i=1}^n \sum_{k=1}^K p_{ikr1}},\]</span></p>
+<p>from my write-up document, we could iteratively update <span class="math inline">\(\sigma_r^2\)</span>.</p>
+<div id="simulation-4" class="section level3">
+<h3>Simulation 4</h3>
+<p>We used the same patterns and proportions as Simulation 1 in the previous section and let <span class="math inline">\(\sigma^2=(4^2,4^2,4^2,4^2)\)</span>. Assume we know <span class="math inline">\(\sigma^2\)</span>, the estimated results were:</p>
+<pre class="r"><code>K = 4
+D = 4
+G = 10000
+sigma2 = c(16,16,16,16)
+pi0 = c(0.01,0.04,0.04,0.91)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,1,1,0)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(4)
+for(g in 1:G){
+  for(d in 1:D){
+    if(A[g,d]==1){
+      X[g,d] = rnorm(1,0,sqrt(1+sigma2[d]))
+    } else{
+      X[g,d] = rnorm(1,0,1)
+    }
+  }
+}
+motif.fitted&lt;-cormotiffit.norm.known(X,sigma2,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)</code></pre>
+<p>CorMotif could correctly recognize four patterns and the proportion is also reasonable. Then we checked the performace without any prior information about <span class="math inline">\(\sigma^2\)</span> with the same simulated data.</p>
+<pre class="r"><code>motif.fitted&lt;-cormotiffit.norm(X,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)</code></pre>
+<p>And the estimated <span class="math inline">\(\sigma^2\)</span> is</p>
+<pre class="r"><code>motif.fitted$bestmotif$motif.s</code></pre>
+</div>
+<div id="simulation-5" class="section level3">
+<h3>Simulation 5</h3>
+<p>We used the same patterns and proportions as Simulation 2 in the previous section and let <span class="math inline">\(\sigma^2=(4^2,4^2,4^2,4^2)\)</span>. Assume we know <span class="math inline">\(\sigma^2\)</span>, the estimated results were:</p>
+<pre class="r"><code>K = 4
+D = 4
+G = 10000
+sigma2 = c(16,16,16,16)
+pi0 = c(0.03,0.03,0.03,0.91)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,0,1,1)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(4)
+for(g in 1:G){
+  for(d in 1:D){
+    if(A[g,d]==1){
+      X[g,d] = rnorm(1,0,sqrt(1+sigma2[d]))
+    } else{
+      X[g,d] = rnorm(1,0,1)
+    }
+  }
+}
+motif.fitted&lt;-cormotiffit.norm.known(X,sigma2,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)</code></pre>
+<p>Again, CorMotif could correctly recognize four patterns and the proportion is also accurate. Then we checked the performace without any prior information about <span class="math inline">\(\sigma^2\)</span> with the same simulated data.</p>
+<pre class="r"><code>motif.fitted&lt;-cormotiffit.norm(X,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)</code></pre>
+<p>And the estimated <span class="math inline">\(\sigma^2\)</span> is</p>
+<pre class="r"><code>motif.fitted$bestmotif$motif.s</code></pre>
+</div>
+<div id="simulation-6" class="section level3">
+<h3>Simulation 6</h3>
+<p>We used the same patterns and proportions as Simulation 3 in the previous section and let <span class="math inline">\(\sigma^2=(4^2,4^2,4^2,4^2,4^2,4^2,4^2,4^2)\)</span>. Assume we know <span class="math inline">\(\sigma^2\)</span>, the estimated results were:</p>
+<pre class="r"><code>K = 5
+D = 8
+G = 10000
+sigma2 = rep(16,D)
+pi0 = c(0.02,0.02,0.02,0.02,0.92)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1,1,1,1,1)
+q0[2,] = c(1,1,1,1,0,0,0,0)
+q0[3,] = c(0,0,0,0,1,1,1,1)
+q0[4,] = c(0,0,1,1,1,1,0,0)
+q0[5,] = c(0,0,0,0,0,0,0,0)
+X = matrix(0,nrow=G,ncol=D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+for(g in 1:G){
+  for(d in 1:D){
+    if(A[g,d]==1){
+      X[g,d] = rnorm(1,0,sqrt(1+sigma2[d]))
+    } else{
+      X[g,d] = rnorm(1,0,1)
+    }
+  }
+}
+motif.fitted&lt;-cormotiffit.norm.known(X,sigma2,K=1:6,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)</code></pre>
+<p>Then we checked the performace without any prior information about <span class="math inline">\(\sigma^2\)</span> with the same simulated data.</p>
+<pre class="r"><code>motif.fitted&lt;-cormotiffit.norm(X,K=1:6,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)</code></pre>
+<p>And the estimated <span class="math inline">\(\sigma^2\)</span> is</p>
+<pre class="r"><code>motif.fitted$bestmotif$motif.s</code></pre>
+<p>Under all situation, CorMotif without knowing <span class="math inline">\(\sigma^2\)</span> performed equally well with knowing <span class="math inline">\(\sigma^2\)</span>.</p>
+</div>
+</div>
+<div id="discussion" class="section level2">
+<h2>Discussion</h2>
+<p>We tested CorMotif for both <span class="math inline">\(limma\)</span> and Guassion model. Through our simulation, we find that correlation motifs only represent a parsimonious representation of the correlation structure. The reason is twofold. On the one hand, CorMotif tends to merge patterns with small proportion. On the other hand, if the differences between cases and controls (for Gaussian model, the variance <span class="math inline">\(\sigma^2\)</span>) are not significant, CorMotif cannot detect the pattern either.</p>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
