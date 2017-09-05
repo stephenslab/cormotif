@@ -1,0 +1,976 @@
+---
+title: "Simulation for Correlation Motif"
+author: "Zhiwei Ma"
+date: "8/30/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Model framework
+
+The framework of Correlation Motif model is based on my write-up document and supplementary matrials by $Wei$ $and$ $Ji$ (2015). In $Wei$ $and$ $Ji$ (2015), they implemented an EM algorithm and introduced priors for both $\pi$ and $Q$. As a result, their iterative formulas for new $\pi$ and new $Q$ are:
+
+\begin{eqnarray}
+\pi_k^{(t+1)} = \frac{\sum_{i=1}^n p_{ik}+1}{n+K} , \\
+q_{kr}^ {(t+1)}=\frac{\sum_{i=1}^n p_{ikr1}+1}{\sum_{i=1}^n p_{ik}+2}.
+\end{eqnarray}
+
+However, one can apply EM algorithm without introducing a prior and obtain a more interpretable formula:
+
+\begin{eqnarray}
+\pi_k^{(t+1)} = \frac{1}{n} \sum_{i=1}^n p_{ik}, \\
+q_{kr}^ {(t+1)}=\frac{\sum_{i=1}^n p_{ikr1}}{\sum_{i=1}^n p_{ik}}.
+\end{eqnarray}
+
+Here $p_{ik}= Pr(z_i=k|X_i,\pi^{(t)}, Q^ {(t)})$ is the posterior probability for gene $i$ belonging to class $k$, and the mean of $p_{ik}$ over $i$ is a reasonable estimations for $\pi_{k}$. The argument is similar for $q_{kr}$. Thus, we could interpret the underlying meaning in our iterative formulas. 
+
+In fact, since $G$ is relatively large and $G \gg K$, the two formulas tend to give very similar results. We will illustrate this idea by implementing these two algorithms seperately on the same dataset: $simudata2$ in R package $Cormotif$. 
+
+Notice that right now we are using the model applying limma ($Smyth$, 2004). The results with prior is 
+
+```{r,cache=TRUE,message=FALSE,warning=FALSE}
+library(Cormotif)
+data(simudata2)
+exprs.simu2<-as.matrix(simudata2[,2:25])
+data(simu2_groupid)
+data(simu2_compgroup)
+
+motif.fitted<-cormotiffit(exprs.simu2,simu2_groupid,simu2_compgroup,
+                          K=1:5,max.iter=1000,BIC=TRUE)
+motif.fitted$bic
+plotIC(motif.fitted)
+plotMotif(motif.fitted)
+```
+
+The results without prior is 
+
+```{r,echo=FALSE}
+## Fit limma model
+limmafit<-function(exprs,groupid,compid){
+	compnum<-nrow(compid)
+	genenum<-nrow(exprs)	
+	limmat<-matrix(0,genenum,compnum)
+	limmas2<-rep(0,compnum)
+	limmadf<-rep(0,compnum)
+	limmav0<-rep(0,compnum)
+	limmag1num<-rep(0,compnum)
+	limmag2num<-rep(0,compnum)
+
+	for(i in 1:compnum) {
+		selid1<-which(groupid == compid[i,1]) 
+		selid2<-which(groupid == compid[i,2])
+		eset<-new("ExpressionSet", exprs=cbind(exprs[,selid1],exprs[,selid2]))
+		g1num<-length(selid1)
+		g2num<-length(selid2)
+		designmat<-cbind(base=rep(1,(g1num+g2num)), delta=c(rep(0,g1num),rep(1,g2num)))
+		fit<-lmFit(eset,designmat)
+		fit<-eBayes(fit)
+		limmat[,i]<-fit$t[,2]
+		limmas2[i]<-fit$s2.prior
+		limmadf[i]<-fit$df.prior
+		limmav0[i]<-fit$var.prior[2]
+		limmag1num[i]<-g1num
+		limmag2num[i]<-g2num
+
+	}
+      limmacompnum<-nrow(compid)
+	result<-list(t=limmat, v0=limmav0, df0=limmadf, s20=limmas2, g1num=limmag1num, g2num=limmag2num,compnum=limmacompnum)
+}
+
+## Log-likelihood for moderated t under H0
+modt.f0.loglike<-function(x,df){
+	a<-dt(x, df, log=TRUE)
+	result<-as.vector(a)
+      	flag<-which(is.na(result)==TRUE)
+      	result[flag]<-0
+      	result
+}
+
+## Log-likelihood for moderated t under H1
+## param=c(df,g1num,g2num,v0)
+modt.f1.loglike<-function(x,param) {
+	df<-param[1]
+	g1num<-param[2]
+	g2num<-param[3]
+	v0<-param[4]
+	w<-sqrt(1+v0/(1/g1num+1/g2num))
+	dt(x/w, df, log=TRUE)-log(w)
+	a<-dt(x/w, df, log=TRUE)-log(w)
+      	result<-as.vector(a)
+      	flag<-which(is.na(result)==TRUE)
+      	result[flag]<-0
+      	result
+}
+
+## Correlation Motif Fit
+cmfit_1<-function(x, type, K=1, tol=1e-3, max.iter=100) {
+	## initialize
+	xrow<-nrow(x)
+	xcol<-ncol(x)
+	loglike0<-list()
+	loglike1<-list()
+	p<-rep(1,K)/K
+	q<-matrix(runif(K*xcol), K, xcol)
+	q[1,]<-rep(0.01,xcol)
+
+	## compute loglikelihood
+	for(i in 1:xcol) {
+		f0<-type[[i]][[1]]
+		f0param<-type[[i]][[2]]
+		f1<-type[[i]][[3]]
+		f1param<-type[[i]][[4]]
+		loglike0[[i]]<-f0(x[,i],f0param)
+		loglike1[[i]]<-f1(x[,i],f1param)	
+	}
+
+	## EM algorithm to get MLE of p and q
+	condlike<-list()
+	for(i in 1:xcol) {
+		condlike[[i]]<-matrix(0,xrow,K)
+	}
+
+	loglike.old <- -1e10
+	for(i.iter in 1:max.iter) {
+
+		err<-tol+1
+
+		## compute posterior cluster membership
+		clustlike<-matrix(0,xrow,K)
+		templike <- matrix(0,xrow,2)
+		for(j in 1:K) {
+			for(i in 1:xcol) {
+				templike[,1]<-log(q[j,i])+loglike1[[i]]
+				templike[,2]<-log(1-q[j,i])+loglike0[[i]]
+				tempmax<-pmax(templike[,1],templike[,2])
+				for(z in 1:2) {
+					templike[,z]<-exp(templike[,z]-tempmax)
+				}
+				tempsum<-templike[,1]+templike[,2]
+				clustlike[,j]<-clustlike[,j]+tempmax+log(tempsum)
+				condlike[[i]][,j]<-templike[,1]/tempsum
+			}
+			clustlike[,j]<-clustlike[,j]+log(p[j])
+		}
+
+		tempmax<-apply(clustlike,1,max)
+		for(j in 1:K) {
+			clustlike[,j]<-exp(clustlike[,j]-tempmax)
+		}
+		tempsum<-apply(clustlike,1,sum)
+		
+		
+		## update motif occurrence rate
+		for(j in 1:K) {
+			clustlike[,j]<-clustlike[,j]/tempsum
+		}
+	
+		p.new<-(apply(clustlike,2,sum))/(xrow)
+		
+		## update motifs
+		q.new<-matrix(0, K, xcol)
+		for(j in 1:K) {
+			clustpsum<-sum(clustlike[,j])
+			for(i in 1:xcol) {
+				q.new[j,i]<-(sum(clustlike[,j]*condlike[[i]][,j]))/(clustpsum)
+			}
+		}
+
+		## evaluate convergence
+		err.p<-max(abs(p.new-p)/p)
+		err.q<-max(abs(q.new-q)/q)
+		err<-max(err.p, err.q)
+
+		## evaluate whether the log.likelihood increases
+
+		loglike.new<-(sum(tempmax+log(tempsum)))/xrow
+
+		p<-p.new
+		q<-q.new
+		loglike.old<-loglike.new
+
+		if(err<tol) {
+			break;
+		}
+	}
+	## compute posterior p
+	clustlike<-matrix(0,xrow,K)
+	for(j in 1:K) {
+		for(i in 1:xcol) {
+			templike[,1]<-log(q[j,i])+loglike1[[i]]
+			templike[,2]<-log(1-q[j,i])+loglike0[[i]]
+			tempmax<-pmax(templike[,1],templike[,2])
+			for(z in 1:2) {
+				templike[,z]<-exp(templike[,z]-tempmax)
+			}
+			tempsum<-templike[,1]+templike[,2]
+			clustlike[,j]<-clustlike[,j]+tempmax+log(tempsum)
+			condlike[[i]][,j]<-templike[,1]/tempsum
+		}
+		clustlike[,j]<-clustlike[,j]+log(p[j])
+	}
+
+	tempmax<-apply(clustlike,1,max)
+	for(j in 1:K) {
+		clustlike[,j]<-exp(clustlike[,j]-tempmax)
+	}
+	tempsum<-apply(clustlike,1,sum)
+	for(j in 1:K) {
+		clustlike[,j]<-clustlike[,j]/tempsum
+	}
+	
+	p.post<-matrix(0,xrow,xcol)
+	for(j in 1:K) {
+		for(i in 1:xcol) {
+			p.post[,i]<-p.post[,i]+clustlike[,j]*condlike[[i]][,j]
+		}
+	}
+
+	## return
+	#calculate back loglikelihood
+	loglike.old<-loglike.old#-(sum(log(p))+sum(log(q)+log(1-q)))/xrow
+	loglike.old<-loglike.old*xrow
+	result<-list(p.post=p.post, motif.prior=p, motif.q=q, loglike=loglike.old)
+}
+
+generatetype<-function(limfitted)
+{
+	jtype<-list()
+	df<-limfitted$g1num+limfitted$g2num-2+limfitted$df0
+	for(j in 1:limfitted$compnum)
+	{
+  		jtype[[j]]<-list(f0=modt.f0.loglike, f0.param=df[j], f1=modt.f1.loglike, f1.param=c(df[j],limfitted$g1num[j],limfitted$g2num[j],limfitted$v0[j]))  
+  	}
+    	jtype
+}
+
+cormotiffit_1<-function(exprs,groupid,compid,K=1, tol=1e-3, max.iter=100,BIC=TRUE)
+{
+	limfitted<-limmafit(exprs,groupid,compid)
+        jtype<-generatetype(limfitted)
+	fitresult<-list()
+	for(i in 1:length(K))
+		fitresult[[i]]<-cmfit_1(limfitted$t,type=jtype,K=K[i],max.iter=max.iter,tol=tol)
+	bic<-rep(0,length(K))
+	aic<-rep(0,length(K))
+	loglike<-rep(0,length(K))
+	for(i in 1:length(K))
+			loglike[i]<-fitresult[[i]]$loglike
+	for(i in 1:length(K))
+			bic[i]<--2*fitresult[[i]]$loglike+(K[i]-1+K[i]*limfitted$compnum)*log(dim(exprs)[1])
+	for(i in 1:length(K))
+			aic[i]<--2*fitresult[[i]]$loglike+2*(K[i]-1+K[i]*limfitted$compnum)
+	if(BIC==TRUE)
+	{
+		bestflag=which(bic==min(bic))
+	}
+	else
+	{
+		bestflag=which(aic==min(aic))
+	}
+	result<-list(bestmotif=fitresult[[bestflag]],bic=cbind(K,bic),
+			aic=cbind(K,aic),loglike=cbind(K,loglike),allresult=fitresult)
+	#result<-list(bestmotif=fitresult[[4]],bic=cbind(K,bic),
+	#             aic=cbind(K,aic),loglike=cbind(K,loglike))
+} 
+
+plotMotif_1<-function(bestmotif,title="")
+{
+	  layout(matrix(1:2,ncol=2))
+          u<-1:dim(bestmotif$motif.q)[2]
+          v<-1:dim(bestmotif$motif.q)[1]
+          image(u,v,t(bestmotif$motif.q),
+          col=gray(seq(from=1,to=0,by=-0.1)),xlab="Study",yaxt = "n",
+		ylab="Corr. Motifs",main=paste(title,"pattern",sep=" "))
+	  axis(2,at=1:length(v))
+          for(i in 1:(length(u)+1))
+          {
+                abline(v=(i-0.5))
+          }
+          for(i in 1:(length(v)+1)) 
+          {
+                abline(h=(i-0.5))
+          }
+	  Ng=10000
+	  if(is.null(bestmotif$p.post)!=TRUE)
+		Ng=nrow(bestmotif$p.post)
+	  genecount=floor(bestmotif$motif.p*Ng)
+	  NK=nrow(bestmotif$motif.q)
+	  plot(0,0.7,pch=".",xlim=c(0,1.2),ylim=c(0.75,NK+0.25),
+		frame.plot=FALSE,axes=FALSE,xlab="No. of genes",ylab="", main=paste(title,"frequency",sep=" "))
+	  segments(0,0.7,bestmotif$motif.p[1],0.7)
+	  rect(0,1:NK-0.3,bestmotif$motif.p,1:NK+0.3,
+		col="dark grey")
+	  mtext(1:NK,at=1:NK,side=2,cex=0.8)
+	  text(bestmotif$motif.p+0.15,1:NK,
+	  labels=floor(bestmotif$motif.p*Ng))
+}
+```
+
+```{r,cache=TRUE}
+motif.fitted<-cormotiffit_1(exprs.simu2,simu2_groupid,simu2_compgroup,K=1:5,max.iter=1000,BIC=TRUE)
+
+motif.fitted$bic
+plotIC(motif.fitted)
+plotMotif(motif.fitted)
+```
+
+The two methods do give very similar results. However in practice, it takes much less iterations for methods with prior to achieve its accuracy. Here we prefer to apply CorMotif with prior. In the rest of document, without specification, we apply CorMOtif with prior. 
+
+## Simulation based on limma
+
+We first duplicated several simulation from $Wei$ $and$ $Ji$ (2015), which was still based on limma. 
+
+### Simulation 1
+
+In simulation 1, we generated 10,000 genes and four studies according to the four different patterns: 100 genes were differentially expressed in all four studies ($Y_i = [1,1,1,1]$); 400 genes were differential only in studies 1 and 2 ($Y_i = [1,1,0,0]$); 400 genes were differential only in studies 2 and 3 ($Y_i = [0,1,1,0]$); 9100 genes were non-differential ($Y_i = [0,0,0,0]$). Each study had six samples: three cases and three controls. The variances $\sigma_{ir}^2$ were simulated from $n_{0r}s_{0r}^2/\chi^2(n_{0r})$, where $n_{0r}=4$ and $s_{0r}^2=0.02$. The expression values were generated using $x_{irlj}\sim N(0,\sigma_{ir}^2)$. When $y_{ir}=1$, drew $\mu_{ir}$ from $N(0,16\sigma_{ir}^2)$, and $\mu_{ir}$ was added to the three cases. 
+
+Notice that in $Wei$ $and$ $Ji$ (2015), they drew $\mu_{ir}$ from $N(0,4\sigma_{ir}^2)$. I think it is a typo, since with this setting, the simulation results are quite unsatisfying and only two patterns were recognized. The reason for that is the difference between cases and controls will be minor if the variance is not large enough, which will weaken the pattern.   
+
+```{r,cache=TRUE}
+K = 4
+D = 4
+G = 10000
+pi0 = c(0.01,0.04,0.04,0.91)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,1,1,0)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=6*D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(1)
+for(g in 1:G){
+  for(d in 1:D){
+    sigma2 = 4*0.02/rchisq(1,4)
+    x = rnorm(6,0,sqrt(sigma2))
+    if(A[g,d]==1){
+      dx = rnorm(1,0,4*sqrt(sigma2))
+      x[1:3] = x[1:3]+dx
+    }
+    X[g,(6*d-5):(6*d)] = x
+  }
+}
+groupid = rep(1:8,each=3)
+compgroup = t(matrix(1:8,ncol=4))
+motif.fitted<-cormotiffit(X,groupid,compgroup,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)
+```
+
+
+The result matches well with $Wei$ $and$ $Ji$ (2015). 
+
+### Simulation 2
+
+In simulation 2, we generated 10,000 genes and four studies according to the four different patterns: 300 genes were differentially expressed in all four studies ($Y_i = [1,1,1,1]$); 300 genes were differential only in studies 1 and 2 ($Y_i = [1,1,0,0]$); 300 genes were differential only in studies 3 and 4 ($Y_i = [0,0,1,1]$); 9100 genes were non-differential ($Y_i = [0,0,0,0]$). 
+
+```{r,cache=TRUE}
+K = 4
+D = 4
+G = 10000
+pi0 = c(0.03,0.03,0.03,0.91)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,0,1,1)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=6*D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(2)
+for(g in 1:G){
+  for(d in 1:D){
+    sigma2 = 4*0.02/rchisq(1,4)
+    x = rnorm(6,0,sqrt(sigma2))
+    if(A[g,d]==1){
+      dx = rnorm(1,0,4*sqrt(sigma2))
+      x[1:3] = x[1:3]+dx
+    }
+    X[g,(6*d-5):(6*d)] = x
+  }
+}
+groupid = rep(1:8,each=3)
+compgroup = t(matrix(1:8,ncol=4))
+motif.fitted<-cormotiffit(X,groupid,compgroup,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)
+```
+
+Then we could check if we change the proportion of four patterns to $200:50:50:9700$.
+
+```{r,cache=TRUE}
+K = 4
+D = 4
+G = 10000
+pi0 = c(0.02,0.005,0.005,0.97)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,0,1,1)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=6*D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(1)
+for(g in 1:G){
+  for(d in 1:D){
+    sigma2 = 4*0.02/rchisq(1,4)
+    x = rnorm(6,0,sqrt(sigma2))
+    if(A[g,d]==1){
+      dx = rnorm(1,0,4*sqrt(sigma2))
+      x[1:3] = x[1:3]+dx
+    }
+    X[g,(6*d-5):(6*d)] = x
+  }
+}
+groupid = rep(1:8,each=3)
+compgroup = t(matrix(1:8,ncol=4))
+motif.fitted<-cormotiffit(X,groupid,compgroup,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)
+```
+
+We could find that the second and third pattern merged togethor, since their proportions were relatively small compared to the first and forth pattern. 
+
+### Simulation 3
+
+In simulation 3, we generated 10,000 genes and eight studies according to the four different patterns: 200 genes were differentially expressed in all four studies ($Y_i = [1,1,1,1,1,1,1,1]$); 200 genes were differential only in studies 1, 2, 3, 4 ($Y_i = [1,1,1,1,0,0,0,0]$); 200 genes were differential only in studies 5, 6, 7, 8 ($Y_i = [0,0,0,0,1,1,1,1]$); 200 genes were differential only in studies 3, 4, 5, 6 ($Y_i = [0,0,1,1,1,1,0,0]$); 9200 genes were non-differential ($Y_i = [0,0,0,0,0,0,0,0,0]$). 
+
+```{r,cache=TRUE}
+K = 5
+D = 8
+G = 10000
+pi0 = c(0.02,0.02,0.02,0.02,0.92)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1,1,1,1,1)
+q0[2,] = c(1,1,1,1,0,0,0,0)
+q0[3,] = c(0,0,0,0,1,1,1,1)
+q0[4,] = c(0,0,1,1,1,1,0,0)
+q0[5,] = c(0,0,0,0,0,0,0,0)
+X = matrix(0,nrow=G,ncol=6*D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(3)
+for(g in 1:G){
+  for(d in 1:D){
+    sigma2 = 4*0.02/rchisq(1,4)
+    x = rnorm(6,0,sqrt(sigma2))
+    if(A[g,d]==1){
+      dx = rnorm(1,0,4*sqrt(sigma2))
+      x[1:3] = x[1:3]+dx
+    }
+    X[g,(6*d-5):(6*d)] = x
+  }
+}
+groupid = rep(1:16,each=3)
+compgroup = t(matrix(1:16,nrow=2))
+motif.fitted<-cormotiffit(X,groupid,compgroup,K=1:6,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)
+```
+
+CorMotif tends to merge weaker patterns with small proportion. Just as $Wei$ $and$ $Ji$ (2015) states, correlation motifs only represent a parsimonious representation of the correlation structure supported by the available data. On the other hand, the two stage method may also be blame. Adding $limma$ structure can increase inaccuracy for estimation. In the next section, we will generate $x_{ir}$ directly from a Gaussian distribution. In fact, any distribution can be applied under our framework. In addition, we can also estimate the parameters for Gaussian distribution.
+
+## CorMotif based on Gaussian model
+
+Let 
+
+\begin{eqnarray*}
+f_{r0}(x_{ir}) &=& N(x_{ir};0,1), \\
+f_{r1}(x_{ir}) &=& N(x_{ir};0,1+\sigma_r^2).
+\end{eqnarray*}
+
+First, we checked the performance of CorMotif by assuming we know $\sigma^2$ exactly. Then we dealed with the situation where we were given no information about $\sigma^2$. Apply 
+
+$$\sigma_r^{2(t+1)}= \frac{\sum_{i=1}^n \sum_{k=1}^K (x_{ir}^2-1)p_{ikr1}}{\sum_{i=1}^n \sum_{k=1}^K p_{ikr1}},$$
+
+from my write-up document, we could iteratively update $\sigma_r^2$. 
+
+### Simulation 4
+
+We used the same patterns and proportions as Simulation 1 in the previous section and let $\sigma^2=(4^2,4^2,4^2,4^2)$. Assume we know $\sigma^2$, the estimated results were:
+
+```{r,echo=FALSE}
+## Log-likelihood for norm under H0 and H1
+modt.f.loglike<-function(x,m,s2) {
+	a<-dnorm(x, m, sqrt(s2), log=TRUE)
+	result<-as.vector(a)
+  flag<-which(is.na(result)==TRUE)
+  result[flag]<-0
+  result
+}
+
+```
+
+```{r,echo=FALSE}
+cmfit.norm.known<-function(x, sigma2, K=1, tol=1e-3, max.iter=100) {
+	## initialize
+	xrow<-nrow(x)
+	xcol<-ncol(x)
+	loglike0<-list()
+	loglike1<-list()
+	p<-rep(1,K)/K
+	q<-matrix(runif(K*xcol), K, xcol)
+	q[1,]<-rep(0.01,xcol)
+	
+	## compute loglikelihood
+	for(i in 1:xcol) {
+  		loglike0[[i]]<-modt.f.loglike(x[,i],0,1)
+  		loglike1[[i]]<-modt.f.loglike(x[,i],0,1+sigma2[i])	
+  	}
+		
+	## EM algorithm to get MLE of p, q and sigma2
+	condlike<-list()
+	for(i in 1:xcol) {
+		condlike[[i]]<-matrix(0,xrow,K)
+	}
+
+	loglike.old <- -1e10
+	for(i.iter in 1:max.iter) {
+		err<-tol+1
+		
+		## compute posterior cluster membership
+		clustlike<-matrix(0,xrow,K)
+		templike <- matrix(0,xrow,2)
+		for(j in 1:K) {
+			for(i in 1:xcol) {
+				templike[,1]<-log(q[j,i])+loglike1[[i]]
+				templike[,2]<-log(1-q[j,i])+loglike0[[i]]
+				tempmax<-pmax(templike[,1],templike[,2])
+				for(z in 1:2) {
+					templike[,z]<-exp(templike[,z]-tempmax)
+				}
+				tempsum<-templike[,1]+templike[,2]
+				clustlike[,j]<-clustlike[,j]+tempmax+log(tempsum)
+				condlike[[i]][,j]<-templike[,1]/tempsum
+			}
+			clustlike[,j]<-clustlike[,j]+log(p[j])
+		}
+
+		tempmax<-apply(clustlike,1,max)
+		for(j in 1:K) {
+			clustlike[,j]<-exp(clustlike[,j]-tempmax)
+		}
+		tempsum<-apply(clustlike,1,sum)
+		
+		
+		## update motif occurrence rate
+		for(j in 1:K) {
+			clustlike[,j]<-clustlike[,j]/tempsum
+		}
+	
+		#p.new<-(apply(clustlike,2,sum))/(xrow)
+		p.new<-(apply(clustlike,2,sum)+1)/(xrow+K)
+		## update motifs
+		q.new<-matrix(0, K, xcol)
+		for(j in 1:K) {
+			clustpsum<-sum(clustlike[,j])
+			for(i in 1:xcol) {
+				#q.new[j,i]<-(sum(clustlike[,j]*condlike[[i]][,j]))/(clustpsum)
+				q.new[j,i]<-(sum(clustlike[,j]*condlike[[i]][,j])+1)/(clustpsum+2)
+			}
+		}
+		## evaluate convergence
+		err.p<-max(abs(p.new-p)/p)
+		err.q<-max(abs(q.new-q)/q)
+		err<-max(err.p, err.q)
+
+		## evaluate whether the log.likelihood increases
+		loglike.new<-(sum(tempmax+log(tempsum))+sum(log(p.new))+sum(log(q.new)+log(1-q.new)))/xrow
+		#loglike.new<-(sum(tempmax+log(tempsum)))/xrow
+
+		p<-p.new
+		q<-q.new
+		loglike.old<-loglike.new
+
+		if(err<tol) {
+			break;
+		}
+	}
+	## compute posterior p
+	clustlike<-matrix(0,xrow,K)
+	for(j in 1:K) {
+		for(i in 1:xcol) {
+			templike[,1]<-log(q[j,i])+loglike1[[i]]
+			templike[,2]<-log(1-q[j,i])+loglike0[[i]]
+			tempmax<-pmax(templike[,1],templike[,2])
+			for(z in 1:2) {
+				templike[,z]<-exp(templike[,z]-tempmax)
+			}
+			tempsum<-templike[,1]+templike[,2]
+			clustlike[,j]<-clustlike[,j]+tempmax+log(tempsum)
+			condlike[[i]][,j]<-templike[,1]/tempsum
+		}
+		clustlike[,j]<-clustlike[,j]+log(p[j])
+	}
+
+	tempmax<-apply(clustlike,1,max)
+	for(j in 1:K) {
+		clustlike[,j]<-exp(clustlike[,j]-tempmax)
+	}
+	tempsum<-apply(clustlike,1,sum)
+	for(j in 1:K) {
+		clustlike[,j]<-clustlike[,j]/tempsum
+	}
+	
+	p.post<-matrix(0,xrow,xcol)
+	for(j in 1:K) {
+		for(i in 1:xcol) {
+			p.post[,i]<-p.post[,i]+clustlike[,j]*condlike[[i]][,j]
+		}
+	}
+
+	## return
+	#calculate back loglikelihood
+	loglike.old<-loglike.old-(sum(log(p))+sum(log(q)+log(1-q)))/xrow
+	#loglike.old<-loglike.old#-(sum(log(p))+sum(log(q)+log(1-q)))/xrow
+	loglike.old<-loglike.old*xrow
+  result<-list(p.post=p.post, motif.prior=p, motif.q=q,loglike=loglike.old,motif.s = sigma2)
+}
+
+cormotiffit.norm.known<-function(x,sigma2,K=1, tol=1e-3, max.iter=100,BIC=TRUE)
+{
+	fitresult<-list()
+	for(i in 1:length(K))
+		fitresult[[i]]<-cmfit.norm.known(x,sigma2,K=K[i],max.iter=max.iter,tol=tol)
+	bic<-rep(0,length(K))
+	aic<-rep(0,length(K))
+	loglike<-rep(0,length(K))
+	for(i in 1:length(K))
+			loglike[i]<-fitresult[[i]]$loglike
+	for(i in 1:length(K))
+			bic[i]<--2*fitresult[[i]]$loglike+(K[i]-1+K[i]*ncol(x))*log(dim(x)[1])
+	for(i in 1:length(K))
+			aic[i]<--2*fitresult[[i]]$loglike+2*(K[i]-1+K[i]*ncol(x))
+	if(BIC==TRUE)
+	{
+		bestflag=which(bic==min(bic))
+	}
+	else
+	{
+		bestflag=which(aic==min(aic))
+	}
+	#result<-list(bestmotif=fitresult[[bestflag]],bic=cbind(K,bic),
+	#		aic=cbind(K,aic),loglike=cbind(K,loglike))
+	result<-list(bestmotif=fitresult[[bestflag]],bic=cbind(K,bic),
+	             aic=cbind(K,aic),loglike=cbind(K,loglike),allresult=fitresult)
+} 
+```
+
+```{r,cache=TRUE}
+K = 4
+D = 4
+G = 10000
+sigma2 = c(16,16,16,16)
+pi0 = c(0.01,0.04,0.04,0.91)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,1,1,0)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(4)
+for(g in 1:G){
+  for(d in 1:D){
+    if(A[g,d]==1){
+      X[g,d] = rnorm(1,0,sqrt(1+sigma2[d]))
+    } else{
+      X[g,d] = rnorm(1,0,1)
+    }
+  }
+}
+motif.fitted<-cormotiffit.norm.known(X,sigma2,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)
+```
+
+CorMotif could correctly recognize four patterns and the proportion is also reasonable. Then we checked the performace without any prior information about $\sigma^2$ with the same simulated data.
+
+```{r,echo=FALSE}
+cmfit.norm<-function(x, K=1, tol=1e-3, max.iter=100) {
+	## initialize
+	xrow<-nrow(x)
+	xcol<-ncol(x)
+	loglike0<-list()
+	loglike1<-list()
+	p<-rep(1,K)/K
+	q<-matrix(runif(K*xcol), K, xcol)
+	q[1,]<-rep(0.01,xcol)
+	sigma2 = rep(1,xcol)
+#	sigma2 = c(16,16,16,16)
+		
+	## EM algorithm to get MLE of p, q and sigma2
+	condlike<-list()
+	for(i in 1:xcol) {
+		condlike[[i]]<-matrix(0,xrow,K)
+	}
+
+	loglike.old <- -1e10
+	
+	for(i.iter in 1:max.iter) {
+	
+	  	err<-tol+1
+		## compute loglikelihood
+  	for(i in 1:xcol) {
+    		loglike0[[i]]<-modt.f.loglike(x[,i],0,1)
+    		loglike1[[i]]<-modt.f.loglike(x[,i],0,1+sigma2[i])	
+    	}
+		## compute posterior cluster membership
+		clustlike<-matrix(0,xrow,K)
+		templike <- matrix(0,xrow,2)
+		for(j in 1:K) {
+			for(i in 1:xcol) {
+				templike[,1]<-log(q[j,i])+loglike1[[i]]
+				templike[,2]<-log(1-q[j,i])+loglike0[[i]]
+				tempmax<-pmax(templike[,1],templike[,2])
+				for(z in 1:2) {
+					templike[,z]<-exp(templike[,z]-tempmax)
+				}
+				tempsum<-templike[,1]+templike[,2]
+				clustlike[,j]<-clustlike[,j]+tempmax+log(tempsum)
+				condlike[[i]][,j]<-templike[,1]/tempsum
+			}
+			clustlike[,j]<-clustlike[,j]+log(p[j])
+		}
+
+		tempmax<-apply(clustlike,1,max)
+		for(j in 1:K) {
+			clustlike[,j]<-exp(clustlike[,j]-tempmax)
+		}
+		tempsum<-apply(clustlike,1,sum)
+		
+		
+		## update motif occurrence rate
+		for(j in 1:K) {
+			clustlike[,j]<-clustlike[,j]/tempsum
+		}
+	
+		#p.new<-(apply(clustlike,2,sum))/(xrow)
+		p.new<-(apply(clustlike,2,sum)+1)/(xrow+K)
+		## update motifs
+		q.new<-matrix(0, K, xcol)
+		for(j in 1:K) {
+			clustpsum<-sum(clustlike[,j])
+			for(i in 1:xcol) {
+				#q.new[j,i]<-(sum(clustlike[,j]*condlike[[i]][,j]))/(clustpsum)
+				q.new[j,i]<-(sum(clustlike[,j]*condlike[[i]][,j])+1)/(clustpsum+2)
+			}
+		}
+    ## update sigma2
+		sigma2.new<-rep(0,xcol)
+		for(i in 1:xcol){
+		  pikr1 = clustlike*condlike[[i]]
+		  xx = x[,i]^2-1
+		  sigma2.new[i] = sum(t(xx)%*%pikr1)/sum(pikr1)
+		}
+		## evaluate convergence
+		err.p<-max(abs(p.new-p)/p)
+		err.q<-max(abs(q.new-q)/q)
+		err.sigma2<-max(abs((sigma2.new-sigma2)/sigma2))
+		err<-max(err.p, err.q, err.sigma2)
+    #err<-max(err.p, err.q)
+		## evaluate whether the log.likelihood increases
+		loglike.new<-(sum(tempmax+log(tempsum))+sum(log(p.new))+sum(log(q.new)+log(1-q.new)))/xrow
+		#loglike.new<-(sum(tempmax+log(tempsum)))/xrow
+
+		p<-p.new
+		q<-q.new
+		sigma2<-sigma2.new
+		loglike.old<-loglike.new
+
+		if(err<tol) {
+			break;
+		}
+	}
+	## compute posterior p
+	clustlike<-matrix(0,xrow,K)
+	for(j in 1:K) {
+		for(i in 1:xcol) {
+			templike[,1]<-log(q[j,i])+loglike1[[i]]
+			templike[,2]<-log(1-q[j,i])+loglike0[[i]]
+			tempmax<-pmax(templike[,1],templike[,2])
+			for(z in 1:2) {
+				templike[,z]<-exp(templike[,z]-tempmax)
+			}
+			tempsum<-templike[,1]+templike[,2]
+			clustlike[,j]<-clustlike[,j]+tempmax+log(tempsum)
+			condlike[[i]][,j]<-templike[,1]/tempsum
+		}
+		clustlike[,j]<-clustlike[,j]+log(p[j])
+	}
+
+	tempmax<-apply(clustlike,1,max)
+	for(j in 1:K) {
+		clustlike[,j]<-exp(clustlike[,j]-tempmax)
+	}
+	tempsum<-apply(clustlike,1,sum)
+	for(j in 1:K) {
+		clustlike[,j]<-clustlike[,j]/tempsum
+	}
+	
+	p.post<-matrix(0,xrow,xcol)
+	for(j in 1:K) {
+		for(i in 1:xcol) {
+			p.post[,i]<-p.post[,i]+clustlike[,j]*condlike[[i]][,j]
+		}
+	}
+
+	## return
+	#calculate back loglikelihood
+	loglike.old<-loglike.old-(sum(log(p))+sum(log(q)+log(1-q)))/xrow
+	#loglike.old<-loglike.old#-(sum(log(p))+sum(log(q)+log(1-q)))/xrow
+	loglike.old<-loglike.old*xrow
+  result<-list(p.post=p.post, motif.prior=p, motif.q=q,loglike=loglike.old,motif.s = sigma2)
+}
+
+cormotiffit.norm<-function(x,K=1, tol=1e-3, max.iter=100,BIC=TRUE)
+{
+	fitresult<-list()
+	for(i in 1:length(K))
+		fitresult[[i]]<-cmfit.norm(x,K=K[i],max.iter=max.iter,tol=tol)
+	bic<-rep(0,length(K))
+	aic<-rep(0,length(K))
+	loglike<-rep(0,length(K))
+	for(i in 1:length(K))
+			loglike[i]<-fitresult[[i]]$loglike
+	for(i in 1:length(K))
+			bic[i]<--2*fitresult[[i]]$loglike+(K[i]-1+K[i]*ncol(x))*log(dim(x)[1])
+	for(i in 1:length(K))
+			aic[i]<--2*fitresult[[i]]$loglike+2*(K[i]-1+K[i]*ncol(x))
+	if(BIC==TRUE)
+	{
+		bestflag=which(bic==min(bic))
+	}
+	else
+	{
+		bestflag=which(aic==min(aic))
+	}
+	#result<-list(bestmotif=fitresult[[bestflag]],bic=cbind(K,bic),
+	#		aic=cbind(K,aic),loglike=cbind(K,loglike))
+	result<-list(bestmotif=fitresult[[bestflag]],bic=cbind(K,bic),
+	             aic=cbind(K,aic),loglike=cbind(K,loglike),allresult=fitresult)
+} 
+```
+
+```{r,cache=TRUE}
+motif.fitted<-cormotiffit.norm(X,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)
+```
+
+And the estimated $\sigma^2$ is 
+
+```{r,cache=TRUE}
+motif.fitted$bestmotif$motif.s
+```
+
+### Simulation 5
+
+We used the same patterns and proportions as Simulation 2 in the previous section and let $\sigma^2=(4^2,4^2,4^2,4^2)$. Assume we know $\sigma^2$, the estimated results were:
+
+```{r,cache=TRUE}
+K = 4
+D = 4
+G = 10000
+sigma2 = c(16,16,16,16)
+pi0 = c(0.03,0.03,0.03,0.91)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,0,1,1)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(4)
+for(g in 1:G){
+  for(d in 1:D){
+    if(A[g,d]==1){
+      X[g,d] = rnorm(1,0,sqrt(1+sigma2[d]))
+    } else{
+      X[g,d] = rnorm(1,0,1)
+    }
+  }
+}
+motif.fitted<-cormotiffit.norm.known(X,sigma2,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)
+```
+
+Again, CorMotif could correctly recognize four patterns and the proportion is also accurate. Then we checked the performace without any prior information about $\sigma^2$ with the same simulated data.
+
+```{r,cache=TRUE}
+motif.fitted<-cormotiffit.norm(X,K=1:5,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)
+```
+
+And the estimated $\sigma^2$ is 
+
+```{r,cache=TRUE}
+motif.fitted$bestmotif$motif.s
+```
+
+### Simulation 6
+
+We used the same patterns and proportions as Simulation 3 in the previous section and let $\sigma^2=(4^2,4^2,4^2,4^2,4^2,4^2,4^2,4^2)$. Assume we know $\sigma^2$, the estimated results were:
+
+
+```{r,cache=TRUE}
+K = 5
+D = 8
+G = 10000
+sigma2 = rep(16,D)
+pi0 = c(0.02,0.02,0.02,0.02,0.92)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1,1,1,1,1)
+q0[2,] = c(1,1,1,1,0,0,0,0)
+q0[3,] = c(0,0,0,0,1,1,1,1)
+q0[4,] = c(0,0,1,1,1,1,0,0)
+q0[5,] = c(0,0,0,0,0,0,0,0)
+X = matrix(0,nrow=G,ncol=D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+for(g in 1:G){
+  for(d in 1:D){
+    if(A[g,d]==1){
+      X[g,d] = rnorm(1,0,sqrt(1+sigma2[d]))
+    } else{
+      X[g,d] = rnorm(1,0,1)
+    }
+  }
+}
+motif.fitted<-cormotiffit.norm.known(X,sigma2,K=1:6,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)
+```
+
+Then we checked the performace without any prior information about $\sigma^2$ with the same simulated data.
+
+```{r,cache=TRUE}
+motif.fitted<-cormotiffit.norm(X,K=1:6,max.iter=1000,BIC=TRUE)
+plotIC(motif.fitted)
+plotMotif(motif.fitted)
+```
+
+And the estimated $\sigma^2$ is 
+
+```{r,cache=TRUE}
+motif.fitted$bestmotif$motif.s
+```
+
+Under all situation, CorMotif without knowing $\sigma^2$ performed equally well with knowing $\sigma^2$. 
+
+## Discussion
+
+We tested CorMotif for both $limma$ and Guassion model. Through our simulation, we find that correlation motifs only represent a parsimonious representation of the correlation structure. The reason is twofold. On the one hand, CorMotif tends to merge patterns with small proportion. On the other hand, if the differences between cases and controls (for Gaussian model, the variance $\sigma^2$) are not significant, CorMotif cannot detect the pattern either. 
+
+
+
+
