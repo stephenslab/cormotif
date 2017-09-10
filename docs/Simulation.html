@@ -214,10 +214,10 @@ $(document).ready(function () {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-09-05</p>
+<p><strong>Last updated:</strong> 2017-09-10</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 7a0e76c</p>
+<p><strong>Code version:</strong> 066d815</p>
 <!-- Add your analysis here -->
 <div id="model-framework" class="section level2">
 <h2>Model framework</h2>
@@ -241,16 +241,48 @@ data(simu2_groupid)
 data(simu2_compgroup)
 
 motif.fitted&lt;-cormotiffit(exprs.simu2,simu2_groupid,simu2_compgroup,
-                          K=1:5,max.iter=1000,BIC=TRUE)
-motif.fitted$bic
-plotIC(motif.fitted)
-plotMotif(motif.fitted)</code></pre>
+                          K=1:5,max.iter=1000,BIC=TRUE)</code></pre>
+<pre><code>[1] &quot;We have run the first 50 iterations for K=3&quot;
+[1] &quot;We have run the first 100 iterations for K=3&quot;
+[1] &quot;We have run the first 50 iterations for K=4&quot;
+[1] &quot;We have run the first 100 iterations for K=4&quot;
+[1] &quot;We have run the first 150 iterations for K=4&quot;
+[1] &quot;We have run the first 200 iterations for K=4&quot;
+[1] &quot;We have run the first 250 iterations for K=4&quot;
+[1] &quot;We have run the first 300 iterations for K=4&quot;
+[1] &quot;We have run the first 350 iterations for K=4&quot;
+[1] &quot;We have run the first 400 iterations for K=4&quot;
+[1] &quot;We have run the first 450 iterations for K=4&quot;
+[1] &quot;We have run the first 50 iterations for K=5&quot;
+[1] &quot;We have run the first 100 iterations for K=5&quot;
+[1] &quot;We have run the first 150 iterations for K=5&quot;
+[1] &quot;We have run the first 200 iterations for K=5&quot;
+[1] &quot;We have run the first 250 iterations for K=5&quot;</code></pre>
+<pre class="r"><code>motif.fitted$bic</code></pre>
+<pre><code>     K      bic
+[1,] 1 44688.73
+[2,] 2 44235.64
+[3,] 3 44210.76
+[4,] 4 44227.07
+[5,] 5 44247.30</code></pre>
+<pre class="r"><code>plotIC(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plotMotif(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-1-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The results without prior is</p>
 <pre class="r"><code>motif.fitted&lt;-cormotiffit_1(exprs.simu2,simu2_groupid,simu2_compgroup,K=1:5,max.iter=1000,BIC=TRUE)
 
-motif.fitted$bic
-plotIC(motif.fitted)
-plotMotif(motif.fitted)</code></pre>
+motif.fitted$bic</code></pre>
+<pre><code>     K      bic
+[1,] 1 44688.71
+[2,] 2 44232.37
+[3,] 3 44202.89
+[4,] 4 44218.54
+[5,] 5 44234.69</code></pre>
+<pre class="r"><code>plotIC(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plotMotif(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The two methods do give very similar results. However in practice, it takes much less iterations for methods with prior to achieve its accuracy. Here we prefer to apply CorMotif with prior. In the rest of document, without specification, we apply CorMOtif with prior.</p>
 </div>
 <div id="simulation-based-on-limma" class="section level2">
@@ -286,9 +318,41 @@ for(g in 1:G){
 }
 groupid = rep(1:8,each=3)
 compgroup = t(matrix(1:8,ncol=4))
-motif.fitted&lt;-cormotiffit(X,groupid,compgroup,K=1:5,max.iter=1000,BIC=TRUE)
-plotIC(motif.fitted)
-plotMotif(motif.fitted)</code></pre>
+motif.fitted&lt;-cormotiffit(X,groupid,compgroup,K=1:5,max.iter=1000,BIC=TRUE)</code></pre>
+<pre><code>[1] &quot;We have run the first 50 iterations for K=2&quot;
+[1] &quot;We have run the first 50 iterations for K=3&quot;
+[1] &quot;We have run the first 100 iterations for K=3&quot;
+[1] &quot;We have run the first 150 iterations for K=3&quot;
+[1] &quot;We have run the first 200 iterations for K=3&quot;
+[1] &quot;We have run the first 250 iterations for K=3&quot;
+[1] &quot;We have run the first 50 iterations for K=4&quot;
+[1] &quot;We have run the first 100 iterations for K=4&quot;
+[1] &quot;We have run the first 150 iterations for K=4&quot;
+[1] &quot;We have run the first 200 iterations for K=4&quot;
+[1] &quot;We have run the first 250 iterations for K=4&quot;
+[1] &quot;We have run the first 300 iterations for K=4&quot;
+[1] &quot;We have run the first 350 iterations for K=4&quot;
+[1] &quot;We have run the first 400 iterations for K=4&quot;
+[1] &quot;We have run the first 450 iterations for K=4&quot;
+[1] &quot;We have run the first 500 iterations for K=4&quot;
+[1] &quot;We have run the first 550 iterations for K=4&quot;
+[1] &quot;We have run the first 50 iterations for K=5&quot;
+[1] &quot;We have run the first 100 iterations for K=5&quot;
+[1] &quot;We have run the first 150 iterations for K=5&quot;
+[1] &quot;We have run the first 200 iterations for K=5&quot;
+[1] &quot;We have run the first 250 iterations for K=5&quot;
+[1] &quot;We have run the first 300 iterations for K=5&quot;
+[1] &quot;We have run the first 350 iterations for K=5&quot;
+[1] &quot;We have run the first 400 iterations for K=5&quot;
+[1] &quot;We have run the first 450 iterations for K=5&quot;
+[1] &quot;We have run the first 500 iterations for K=5&quot;
+[1] &quot;We have run the first 550 iterations for K=5&quot;
+[1] &quot;We have run the first 600 iterations for K=5&quot;
+[1] &quot;We have run the first 650 iterations for K=5&quot;</code></pre>
+<pre class="r"><code>plotIC(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plotMotif(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The result matches well with <span class="math inline">\(Wei\)</span> <span class="math inline">\(and\)</span> <span class="math inline">\(Ji\)</span> (2015).</p>
 </div>
 <div id="simulation-2" class="section level3">
@@ -320,9 +384,35 @@ for(g in 1:G){
 }
 groupid = rep(1:8,each=3)
 compgroup = t(matrix(1:8,ncol=4))
-motif.fitted&lt;-cormotiffit(X,groupid,compgroup,K=1:5,max.iter=1000,BIC=TRUE)
-plotIC(motif.fitted)
-plotMotif(motif.fitted)</code></pre>
+motif.fitted&lt;-cormotiffit(X,groupid,compgroup,K=1:5,max.iter=1000,BIC=TRUE)</code></pre>
+<pre><code>[1] &quot;We have run the first 50 iterations for K=3&quot;
+[1] &quot;We have run the first 50 iterations for K=4&quot;
+[1] &quot;We have run the first 100 iterations for K=4&quot;
+[1] &quot;We have run the first 150 iterations for K=4&quot;
+[1] &quot;We have run the first 200 iterations for K=4&quot;
+[1] &quot;We have run the first 250 iterations for K=4&quot;
+[1] &quot;We have run the first 300 iterations for K=4&quot;
+[1] &quot;We have run the first 350 iterations for K=4&quot;
+[1] &quot;We have run the first 50 iterations for K=5&quot;
+[1] &quot;We have run the first 100 iterations for K=5&quot;
+[1] &quot;We have run the first 150 iterations for K=5&quot;
+[1] &quot;We have run the first 200 iterations for K=5&quot;
+[1] &quot;We have run the first 250 iterations for K=5&quot;
+[1] &quot;We have run the first 300 iterations for K=5&quot;
+[1] &quot;We have run the first 350 iterations for K=5&quot;
+[1] &quot;We have run the first 400 iterations for K=5&quot;
+[1] &quot;We have run the first 450 iterations for K=5&quot;
+[1] &quot;We have run the first 500 iterations for K=5&quot;
+[1] &quot;We have run the first 550 iterations for K=5&quot;
+[1] &quot;We have run the first 600 iterations for K=5&quot;
+[1] &quot;We have run the first 650 iterations for K=5&quot;
+[1] &quot;We have run the first 700 iterations for K=5&quot;
+[1] &quot;We have run the first 750 iterations for K=5&quot;
+[1] &quot;We have run the first 800 iterations for K=5&quot;</code></pre>
+<pre class="r"><code>plotIC(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plotMotif(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Then we could check if we change the proportion of four patterns to <span class="math inline">\(200:50:50:9700\)</span>.</p>
 <pre class="r"><code>K = 4
 D = 4
@@ -350,9 +440,36 @@ for(g in 1:G){
 }
 groupid = rep(1:8,each=3)
 compgroup = t(matrix(1:8,ncol=4))
-motif.fitted&lt;-cormotiffit(X,groupid,compgroup,K=1:5,max.iter=1000,BIC=TRUE)
-plotIC(motif.fitted)
-plotMotif(motif.fitted)</code></pre>
+motif.fitted&lt;-cormotiffit(X,groupid,compgroup,K=1:5,max.iter=1000,BIC=TRUE)</code></pre>
+<pre><code>[1] &quot;We have run the first 50 iterations for K=3&quot;
+[1] &quot;We have run the first 100 iterations for K=3&quot;
+[1] &quot;We have run the first 150 iterations for K=3&quot;
+[1] &quot;We have run the first 200 iterations for K=3&quot;
+[1] &quot;We have run the first 50 iterations for K=4&quot;
+[1] &quot;We have run the first 100 iterations for K=4&quot;
+[1] &quot;We have run the first 150 iterations for K=4&quot;
+[1] &quot;We have run the first 200 iterations for K=4&quot;
+[1] &quot;We have run the first 250 iterations for K=4&quot;
+[1] &quot;We have run the first 300 iterations for K=4&quot;
+[1] &quot;We have run the first 350 iterations for K=4&quot;
+[1] &quot;We have run the first 50 iterations for K=5&quot;
+[1] &quot;We have run the first 100 iterations for K=5&quot;
+[1] &quot;We have run the first 150 iterations for K=5&quot;
+[1] &quot;We have run the first 200 iterations for K=5&quot;
+[1] &quot;We have run the first 250 iterations for K=5&quot;
+[1] &quot;We have run the first 300 iterations for K=5&quot;
+[1] &quot;We have run the first 350 iterations for K=5&quot;
+[1] &quot;We have run the first 400 iterations for K=5&quot;
+[1] &quot;We have run the first 450 iterations for K=5&quot;
+[1] &quot;We have run the first 500 iterations for K=5&quot;
+[1] &quot;We have run the first 550 iterations for K=5&quot;
+[1] &quot;We have run the first 600 iterations for K=5&quot;
+[1] &quot;We have run the first 650 iterations for K=5&quot;
+[1] &quot;We have run the first 700 iterations for K=5&quot;</code></pre>
+<pre class="r"><code>plotIC(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plotMotif(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>We could find that the second and third pattern merged togethor, since their proportions were relatively small compared to the first and forth pattern.</p>
 </div>
 <div id="simulation-3" class="section level3">
@@ -385,9 +502,16 @@ for(g in 1:G){
 }
 groupid = rep(1:16,each=3)
 compgroup = t(matrix(1:16,nrow=2))
-motif.fitted&lt;-cormotiffit(X,groupid,compgroup,K=1:6,max.iter=1000,BIC=TRUE)
-plotIC(motif.fitted)
-plotMotif(motif.fitted)</code></pre>
+motif.fitted&lt;-cormotiffit(X,groupid,compgroup,K=1:6,max.iter=1000,BIC=TRUE)</code></pre>
+<pre><code>[1] &quot;We have run the first 50 iterations for K=3&quot;
+[1] &quot;We have run the first 50 iterations for K=4&quot;
+[1] &quot;We have run the first 50 iterations for K=5&quot;
+[1] &quot;We have run the first 50 iterations for K=6&quot;
+[1] &quot;We have run the first 100 iterations for K=6&quot;</code></pre>
+<pre class="r"><code>plotIC(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plotMotif(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>CorMotif tends to merge weaker patterns with small proportion. Just as <span class="math inline">\(Wei\)</span> <span class="math inline">\(and\)</span> <span class="math inline">\(Ji\)</span> (2015) states, correlation motifs only represent a parsimonious representation of the correlation structure supported by the available data. On the other hand, the two stage method may also be blame. Adding <span class="math inline">\(limma\)</span> structure can increase inaccuracy for estimation. In the next section, we will generate <span class="math inline">\(x_{ir}\)</span> directly from a Gaussian distribution. In fact, any distribution can be applied under our framework. In addition, we can also estimate the parameters for Gaussian distribution.</p>
 </div>
 </div>
@@ -428,14 +552,19 @@ for(g in 1:G){
   }
 }
 motif.fitted&lt;-cormotiffit.norm.known(X,sigma2,K=1:5,max.iter=1000,BIC=TRUE)
-plotIC(motif.fitted)
-plotMotif(motif.fitted)</code></pre>
+plotIC(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plotMotif(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>CorMotif could correctly recognize four patterns and the proportion is also reasonable. Then we checked the performace without any prior information about <span class="math inline">\(\sigma^2\)</span> with the same simulated data.</p>
 <pre class="r"><code>motif.fitted&lt;-cormotiffit.norm(X,K=1:5,max.iter=1000,BIC=TRUE)
-plotIC(motif.fitted)
-plotMotif(motif.fitted)</code></pre>
+plotIC(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plotMotif(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>And the estimated <span class="math inline">\(\sigma^2\)</span> is</p>
 <pre class="r"><code>motif.fitted$bestmotif$motif.s</code></pre>
+<pre><code>[1] 15.57719 17.97454 14.37695 10.53775</code></pre>
 </div>
 <div id="simulation-5" class="section level3">
 <h3>Simulation 5</h3>
@@ -464,14 +593,19 @@ for(g in 1:G){
   }
 }
 motif.fitted&lt;-cormotiffit.norm.known(X,sigma2,K=1:5,max.iter=1000,BIC=TRUE)
-plotIC(motif.fitted)
-plotMotif(motif.fitted)</code></pre>
+plotIC(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plotMotif(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Again, CorMotif could correctly recognize four patterns and the proportion is also accurate. Then we checked the performace without any prior information about <span class="math inline">\(\sigma^2\)</span> with the same simulated data.</p>
 <pre class="r"><code>motif.fitted&lt;-cormotiffit.norm(X,K=1:5,max.iter=1000,BIC=TRUE)
-plotIC(motif.fitted)
-plotMotif(motif.fitted)</code></pre>
+plotIC(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plotMotif(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>And the estimated <span class="math inline">\(\sigma^2\)</span> is</p>
 <pre class="r"><code>motif.fitted$bestmotif$motif.s</code></pre>
+<pre><code>[1] 15.44301 17.94769 15.85088 15.46378</code></pre>
 </div>
 <div id="simulation-6" class="section level3">
 <h3>Simulation 6</h3>
@@ -500,14 +634,19 @@ for(g in 1:G){
   }
 }
 motif.fitted&lt;-cormotiffit.norm.known(X,sigma2,K=1:6,max.iter=1000,BIC=TRUE)
-plotIC(motif.fitted)
-plotMotif(motif.fitted)</code></pre>
+plotIC(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plotMotif(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-17-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Then we checked the performace without any prior information about <span class="math inline">\(\sigma^2\)</span> with the same simulated data.</p>
 <pre class="r"><code>motif.fitted&lt;-cormotiffit.norm(X,K=1:6,max.iter=1000,BIC=TRUE)
-plotIC(motif.fitted)
-plotMotif(motif.fitted)</code></pre>
+plotIC(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plotMotif(motif.fitted)</code></pre>
+<p><img src="figure/Simulation.Rmd/unnamed-chunk-18-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>And the estimated <span class="math inline">\(\sigma^2\)</span> is</p>
 <pre class="r"><code>motif.fitted$bestmotif$motif.s</code></pre>
+<pre><code>[1] 17.52847 16.99682 16.54558 16.10108 16.85498 16.83212 17.13306 13.94331</code></pre>
 <p>Under all situation, CorMotif without knowing <span class="math inline">\(\sigma^2\)</span> performed equally well with knowing <span class="math inline">\(\sigma^2\)</span>.</p>
 </div>
 </div>
