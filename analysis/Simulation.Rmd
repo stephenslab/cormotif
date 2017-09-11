@@ -2,9 +2,7 @@
 title: "Simulation for Correlation Motif"
 author: "Zhiwei Ma"
 date: "8/30/2017"
-output: 
-  html_document:
-    toc: false
+output: html_document
 ---
 <!-- The file analysis/chunks.R contains chunks that define default settings
 shared across the workflowr files. -->
