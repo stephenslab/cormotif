@@ -29,7 +29,7 @@ knitr::read_chunk("chunks.R")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Model framework
+## Model Framework
 
 The framework of Correlation Motif model is based on my write-up document and supplementary matrials by $Wei$ $and$ $Ji$ (2015). In $Wei$ $and$ $Ji$ (2015), they implemented an EM algorithm and introduced priors for both $\pi$ and $Q$. As a result, their iterative formulas for new $\pi$ and new $Q$ are:
 
