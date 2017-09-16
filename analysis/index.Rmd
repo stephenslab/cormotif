@@ -4,6 +4,8 @@ output:
   html_document:
     toc: false
 ---
+**Last updated:** `r Sys.Date()`
+**Code version:** `r system("git log -1 --format='%H'", intern = TRUE)`
 
 
 [link](Simulation.html)
