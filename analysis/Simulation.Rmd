@@ -991,6 +991,10 @@ Under all situation, CorMotif without knowing $\sigma^2$ performed equally well 
 
 We tested CorMotif for both $limma$ and Guassion model. Through our simulation, we find that correlation motifs only represent a parsimonious representation of the correlation structure. The reason is twofold. On the one hand, CorMotif tends to merge patterns with small proportion. On the other hand, if the differences between cases and controls (for Gaussian model, the variance $\sigma^2$) are not significant, CorMotif cannot detect the pattern either. 
 
+## Session information.
 
+```{r info}
+print(sessionInfo())
+```
 
 
