@@ -1,0 +1,136 @@
+\documentclass[11pt]{article}   	
+\usepackage{geometry}                		
+\geometry{letterpaper}                   		
+\usepackage{setspace}
+\doublespacing
+
+\usepackage{graphicx}					
+\usepackage{amssymb}
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+
+\newtheorem{assumption}{Assumption}
+
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+
+\title{Generic Cormotif}
+\author{Zhiwei Ma}
+\date{September 2017}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+%\textit{lfdr}
+\section{Methods}
+
+\subsection{Model Outline}
+
+Our method is designed to estimate the effects of multiple units in multiple studies. Suppose there are totally $n$ units and $R$ studies. Let $\beta = [\beta_{jr}]_{J\times R}$ denote "effects" of interest. For instance, $\beta_{jr}$ could be the difference in the mean expression of gene $j$ at study $r$ under two conditions. 
+
+Assume that the available data are estimates $\hat \beta = [\hat \beta_{jr}]_{J\times R}$ of the effects, and the corresponding estimated standard errors $\hat s = [\hat s_{jr}]_{J\times R}$. Let $\beta_j:=(\beta_{j1},\ldots,\beta_{jr})'$, where $j=1,2,\ldots,n$. Similarly for $\hat \beta_j$. 
+
+Similar to the original $Cormotif$, we assume that all units fall into $K$ different classes. Besides, we have the following assumptions:
+
+\begin{assumption}Each units $j$ is randomly and independently assigned to a class label $z_j$ according to probability $\pi=(\pi_1,\ldots,\pi_K)$. Here $\pi_k=P(z_j=k)$ is the prior probability that a unit belongs to class $k$. We have $\sum_k\pi_k = 1$.
+\end{assumption}
+ 
+\begin{assumption}Given unit's class label $z_j=k$, the effects $\beta_{j1},\beta_{j2},\ldots,\beta_{jR}$ are independent from unimodal distribution $g_{kr}$. 
+\end{assumption}
+
+Here we describe the simplest version of our model. First we assume the effect $\beta_{jr}$ is independent of their standard errors $\hat s_{jr}$. Then by Assumption 1 and 2, we have
+\begin{equation}
+p(\beta_j|\pi,g,\hat s) = \sum_{k=1}^K\pi_k\prod_{r=1}^R  g_{kr}(\beta_{jr}),
+\label{eq:1}
+\end{equation}
+where $g$ represents $\{g_{kr}|k = 1,\ldots,K$, $r=1,\ldots,R\}$. A simple way to implement the unimodal assumption (UA) is to assume that $g_{kr}$ is a mixture of a point mass at 0 and a mixture of $zero-mean$ normal distribution:
+\begin{equation}
+g_{kr}(\cdot) =  w_0^{kr}\delta_0(\cdot)+\sum_{l=1}^L w_l^{kr}N(\cdot;0,\sigma_l^2),
+\label{eq:2}
+\end{equation}
+where $\delta_0(\cdot)$ denotes a point mass on 0, and $N(\cdot;\mu,\sigma^2)$ denotes the density of Normal distribution with mean $\mu$ and variance $\sigma^2$. Here we assume  $\sigma_1,\sigma_2,\ldots,\sigma_L$ are fixed positive numbers forming a wide and dense grid. 
+
+For likelihood $p(\hat \beta|\beta,\hat s)$, we assume a Normal approximation:
+\begin{equation}
+p(\hat \beta|\beta,\hat s) = \prod_{j=1}^np(\hat \beta_j|\beta_j,\hat s) = \prod_{j=1}^n\prod_{r=1}^RN(\hat\beta_{jr};\beta_{jr},\hat s_{jr}^2).
+\label{eq:3}
+\end{equation}
+
+Together, (\ref{eq:1})-(\ref{eq:3}) imply that 
+\begin{eqnarray}
+p(\hat\beta|\pi,g,\hat s) &=& \prod_{j=1}^n\left[\sum_{k=1}^K\pi_k\prod_{r=1}^R(g_{kr}*N_{jr})(\hat\beta_{jr})\right] \nonumber \\ 
+&=& \prod_{j=1}^n\left\{\sum_{k=1}^K\pi_k\prod_{r=1}^R\left[ \sum_{l=0}^Lw_l^{kr}N(\hat\beta_{jr};0,\sigma_l^2+\hat s_{jr}^2)\right]\right\}.
+\label{eq:4}
+\end{eqnarray}
+Here $N_{jr}$ denotes $N(\cdot;0,\hat s_{jr}^2)$ and $*$ means the convolution of two functions. We define $\sigma_0:=0$.
+
+Model (\ref{eq:4}) is the extension of original Cormotif: set $L=1$ and assume $\hat s_{jr}^2$s are identical for all $j$, (\ref{eq:4}) is just Cormotif under Normal distribution. Similar to Cormotif, our model can capture the correlation among multiple studies. To see this, consider the likelihood for unit $j$. Based on our model, $p(\hat\beta_j|\pi,g,\hat s) = \sum_{k=1}^K\pi_k\prod_{r=1}^R(g_{kr}*N_{jr})(\hat\beta_{jr})$. The distribution for unit $j$ under study $r$ is $p(\hat\beta_{jr}|\pi,g,\hat s) = \sum_{k=1}^K\pi_k(g_{kr}*N_{jr})(\hat\beta_{jr})$. It is clear that $p(\hat\beta_j|\pi,g,\hat s) \neq \prod_{r=1}^Rp(\hat\beta_{jr}|\pi,g,\hat s)$, so different studies are dependent. 
+
+Another advantage of our generic model is that we could compute the posterior distribution for effects $\beta_{jr}$. By Bayes theorem, we have
+\begin{equation}
+    p(\beta_{jr}|\hat\beta_{jr},\hat s_{jr}) \propto p(\beta_{jr}|\hat s_{jr})p(\hat\beta_{jr}|\beta_{jr},\hat s_{jr})
+\end{equation}
+
+\subsection{Fitting the model}
+
+\section{Detailed Method}
+
+\subsection{Embellishments}
+
+\subsection{Implementation Details}
+
+\subsubsection{Optimization}
+This section We presents the EM algorithm used to estimate both $\pi$ and $g$. First compute the log likelihood function for $\hat\beta$ and group label $z=(z_1,\ldots,z_n)'$:
+\begin{eqnarray}
+    &&\log p(\hat\beta,z|\pi,g,\hat s) = \sum_{j=1}^n\log p(\hat\beta_j|z_j,\pi,g,\hat s)+\sum_{j=1}^n\log p(z_j|\pi) \nonumber\\
+    &=& \sum_{j=1}^n\sum_{k=1}^K\mathbb{I}(z_j=k)\log p(\hat\beta_j|z_j=k,\pi,g,\hat s)
+    +\sum_{j=1}^n\sum_{k=1}^K\mathbb{I}(z_j=k)\log p(z_j=k|\pi)\nonumber\\
+    &=& \sum_{j=1}^n\sum_{k=1}^K\mathbb{I}(z_j=k)\sum_{r=1}^R\log \left[(g_{kr}*N_{jr})(\hat\beta_{jr}) \right]+\sum_{j=1}^n\sum_{k=1}^K\mathbb{I}(z_j=k)\log\pi_k.
+\end{eqnarray}
+
+Here $z$ is a latent variable. The EM algorithm seeks to find the MLE of the marginal likelihood (\ref{eq:4}) by iteratively applying the E-step and the M-step.
+
+In the E-step, one evaluates the $Q$-function $Q(\pi,g|\pi^{(t)},g^{(t)})$, here $(\pi^{(t)},g^{(t)})$ is the current estimation. We have
+\begin{eqnarray}
+    &&Q(\pi,g|\pi^{(t)},g^{(t)}) = E_{z|\hat\beta,\hat s,\pi^{(t)},g^{(t)}}\left[\log p(\hat\beta,z|\pi,g,\hat s)\right]\nonumber\\
+    &=&\sum_{j=1}^n\sum_{k=1}^K\sum_{r=1}^Rp_{jk}\log \left[(g_{kr}*N_{jr})(\hat\beta_{jr}) \right]+\sum_{j=1}^n\sum_{k=1}^Kp_{jk}\log\pi_k,
+\label{eq:Q}
+\end{eqnarray}
+where we denote
+\begin{eqnarray}
+    p_{jk}&=&E_{z|\hat\beta,\hat s,\pi^{(t)},g^{(t)}}[\mathbb{I}(z_j=k)]=p(z_j=k|\hat\beta_j,\hat s,\pi^{(t)},g^{(t)})\nonumber\\
+    &=& \frac{p(\hat\beta_j,z_j=k|\hat s,\pi^{(t)},g^{(t)})}{p(\hat\beta_j|\hat s,\pi^{(t)},g^{(t)})}\nonumber\\
+    &=& \frac{\pi_k^{(t)}\prod_{r=1}^R(g_{kr}^{(t)}*N_{jr})(\hat\beta_{jr})}{\sum_{k'=1}^K\pi_{k'}^{(t)}\prod_{r=1}^R(g_{k'r}^{(t)}*N_{jr})(\hat\beta_{jr})}
+\end{eqnarray}
+
+In the M-step, one finds $\pi$ and $g$ that maximize the $Q$-function $Q(\pi,g|\pi^{(t)},g^{(t)})$, and denote them as $\pi^{(t+1)}$ and $g^{(t+1)}$, that is 
+\begin{equation}
+(\pi^{(t+1)}, g^ {(t+1)}) =\argmax_{(\pi,g)} Q(\pi,g|\pi^{(t)},g^{(t)}).
+\end{equation}
+For $\pi^{(t+1)}$, we could optimize it from (\ref{eq:Q}) directly and get
+\begin{equation}
+    \pi_k^{(t+1)} = \frac{1}{n} \sum_{j=1}^n p_{jk}.
+\end{equation}
+Notice in (\ref{eq:Q}), we could separately optimize $g_{kr}$ for fixed $k$ and $r$, that is 
+\begin{equation}
+    g_{kr}^ {(t+1)}=\argmax_{g_{kr}}\sum_{j=1}^np_{jk}\log \left[(g_{kr}*N_{jr})(\hat\beta_{jr}) \right].
+\label{eq:g_kr}
+\end{equation}
+Optimizing (\ref{eq:g_kr}) is a convex problem, which we solve using an EM algorithm, accelerated using R package {\tt SQUAREM} .
+
+\subsubsection{Model Selection: Bayesian Information Criterion}
+
+To determine the class number of $K$ , we use Bayesian Information Criterion(BIC). The BIC in our setting is written as 
+\begin{eqnarray}
+{\rm BIC}(K) &=& -2\log p(\hat\beta|\pi,g,\hat s) + (K\times R\times L+K-1)\times \log n \nonumber \\
+&=& -2 \sum_{j=1}^n\log\left[\sum_{k=1}^K\pi_k\prod_{r=1}^R(g_{kr}*N_{jr})(\hat\beta_{jr})\right] \nonumber\\
+&+& (K\times R\times L+K-1)\times \log n.
+\end{eqnarray}
+Here $K-1$ is the number of parameters for $\pi$, $K\times R\times L$ is the number of parameters involved in $g$ and $n$ is the unit number. We choose the K with the smallest BIC, that is 
+\begin{equation}
+\hat K = \argmin_{K\geq1} {\rm BIC}(K).
+\end{equation}
+
+\end{document}
