@@ -5,7 +5,9 @@ output:
     toc: false
 ---
 **Last updated:** `r Sys.Date()`
+
 **Code version:** `r system("git log -1 --format='%H'", intern = TRUE)`
 
+## Analysis
 
-[link](Simulation.html)
+1. [Simulation work based on original cormotif](Simulation.html)
