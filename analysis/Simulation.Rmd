@@ -31,7 +31,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Model Framework
 
-The framework of Correlation Motif model is based on my write-up document and supplementary matrials by $Wei$ $and$ $Ji$ (2015). In $Wei$ $and$ $Ji$ (2015), they implemented an EM algorithm and introduced priors for both $\pi$ and $Q$. As a result, their iterative formulas for new $\pi$ and new $Q$ are:
+The framework of Correlation Motif model is based on my [write-up document](../paper/Cormotif.pdf) and supplementary matrials by [$Wei$ $and$ $Ji$ (2015)][wj]. In $Wei$ $and$ $Ji$ (2015), they implemented an EM algorithm and introduced priors for both $\pi$ and $Q$. As a result, their iterative formulas for new $\pi$ and new $Q$ are:
 
 \begin{eqnarray}
 \pi_k^{(t+1)} = \frac{\sum_{i=1}^n p_{ik}+1}{n+K} , \\
@@ -997,4 +997,4 @@ We tested CorMotif for both $limma$ and Guassion model. Through our simulation, 
 print(sessionInfo())
 ```
 
-
+[wj]: https://doi.org/10.1093/biostatistics/kxu038
