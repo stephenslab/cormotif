@@ -315,11 +315,11 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-09-15</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 59b6616</p>
+<p><strong>Code version:</strong> 573f126</p>
 <!-- Add your analysis here -->
 <div id="model-framework" class="section level2">
 <h2>Model Framework</h2>
-<p>The framework of Correlation Motif model is based on my <a href="https://github.com/stephenslab/cormotif/blob/master/paper/Cormotif.pdf">write-up document</a> and supplementary matrials by <a href="https://doi.org/10.1093/biostatistics/kxu038"><span class="math inline">\(Wei\)</span> <span class="math inline">\(and\)</span> <span class="math inline">\(Ji\)</span> (2015)</a>. In <span class="math inline">\(Wei\)</span> <span class="math inline">\(and\)</span> <span class="math inline">\(Ji\)</span> (2015), they implemented an EM algorithm and introduced priors for both <span class="math inline">\(\pi\)</span> and <span class="math inline">\(Q\)</span>. As a result, their iterative formulas for new <span class="math inline">\(\pi\)</span> and new <span class="math inline">\(Q\)</span> are:</p>
+<p>The framework of Correlation Motif model is based on my <a href="../paper/Cormotif.pdf">write-up document</a> and supplementary matrials by <a href="https://doi.org/10.1093/biostatistics/kxu038"><span class="math inline">\(Wei\)</span> <span class="math inline">\(and\)</span> <span class="math inline">\(Ji\)</span> (2015)</a>. In <span class="math inline">\(Wei\)</span> <span class="math inline">\(and\)</span> <span class="math inline">\(Ji\)</span> (2015), they implemented an EM algorithm and introduced priors for both <span class="math inline">\(\pi\)</span> and <span class="math inline">\(Q\)</span>. As a result, their iterative formulas for new <span class="math inline">\(\pi\)</span> and new <span class="math inline">\(Q\)</span> are:</p>
 <span class="math display">\[\begin{eqnarray}
 \pi_k^{(t+1)} = \frac{\sum_{i=1}^n p_{ik}+1}{n+K} , \\
 q_{kr}^ {(t+1)}=\frac{\sum_{i=1}^n p_{ikr1}+1}{\sum_{i=1}^n p_{ik}+2}.
