@@ -66,43 +66,43 @@ fit = generic.cormotif(betahat,sebetahat,K=1:5)
 
 After fitting the generic cormotif model, we can check the BIC values obtained by all cluster numbers:
 
-```{r,cache=TRUE}
+```{r}
 fit$bic
 ```
 
-$K = 4$ has the smallest BIC. The standard deviation built by our method is 
+$K = 4$ has the smallest BIC. The standard deviation $\sigma_0,\sigma_1,\ldots,\sigma_L$ built by our method is 
 
-```{r,cache=TRUE}
+```{r}
 fit$mixsd
 ```
 
 And the estimated $\pi$ for $K = 4$ is 
 
-```{r,cache=TRUE}
+```{r}
 fit$bestmotif$pi
 ```
 
 Then we could check the estimation for $g$, i.e. the values of $w$. The estimated $w$ for studies 1 is 
 
-```{r,cache=TRUE}
+```{r}
 fit$bestmotif$W[[1]]
 ```
 
 The estimated $w$ for studies 2 is 
 
-```{r,cache=TRUE}
+```{r}
 fit$bestmotif$W[[2]]
 ```
 
 The estimated $w$ for studies 3 is 
 
-```{r,cache=TRUE}
+```{r}
 fit$bestmotif$W[[3]]
 ```
 
 The estimated $w$ for studies 4 is 
 
-```{r,cache=TRUE}
+```{r}
 fit$bestmotif$W[[4]]
 ```
 
@@ -110,13 +110,13 @@ All of them matches well with our setting, which verifies our algorithm.
 
 Also, we could compute the lfdr: 
 
-```{r,cache=TRUE}
+```{r}
 head(cbind(fit$result[[1]]$lfdr,fit$result[[2]]$lfdr,fit$result[[3]]$lfdr,fit$result[[4]]$lfdr))
 ```
 
 And lfsr:
 
-```{r,cache=TRUE}
+```{r}
 head(cbind(fit$result[[1]]$lfsr,fit$result[[2]]$lfsr,fit$result[[3]]$lfsr,fit$result[[4]]$lfsr))
 ```
 
