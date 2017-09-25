@@ -10,9 +10,15 @@
 \usepackage{bm}
 
 \newtheorem{assumption}{Assumption}
+\newtheorem{remark}{Remark}
+
+\def\lfdr{\textit{lfdr}}
+\def\lfsr{\textit{lfsr}}
+\def\ash{{\tt ash}\xspace}
 
 \DeclareMathOperator*{\argmax}{argmax}
 \DeclareMathOperator*{\argmin}{argmin}
+
 
 \title{Generic Cormotif}
 \author{Zhiwei Ma}
@@ -30,27 +36,32 @@
 
 Our method is designed to estimate the effects of multiple units in multiple studies. Suppose there are totally $n$ units and $R$ studies. Let $\beta = [\beta_{jr}]_{J\times R}$ denote "effects" of interest. For instance, $\beta_{jr}$ could be the difference in the mean expression of gene $j$ at study $r$ under two conditions. 
 
-Assume that the available data are estimates $\hat \beta = [\hat \beta_{jr}]_{J\times R}$ of the effects, and the corresponding estimated standard errors $\hat s = [\hat s_{jr}]_{J\times R}$. Let $\beta_j:=(\beta_{j1},\ldots,\beta_{jr})'$, where $j=1,2,\ldots,n$. Similarly for $\hat \beta_j$. 
+Assume that the available data are estimates $\hat \beta = [\hat \beta_{jr}]_{J\times R}$ of the effects, and the corresponding estimated standard errors $\hat s = [\hat s_{jr}]_{J\times R}$. Let $\beta_j:=(\beta_{j1},\ldots,\beta_{jr})'$, where $j=1,2,\ldots,n$. Similarly for $\hat \beta_j$ and $\hat s_j$,
 
-Similar to the original $Cormotif$, we assume that all units fall into $K$ different classes. Besides, we have the following assumptions:
+Similar to the original \textit{Cormotif} \cite{cormotif}, we assume that all units fall into $K$ different classes. Besides, we have the following assumptions, which distinguish our model from existing ones:
 
 \begin{assumption}Each units $j$ is randomly and independently assigned to a class label $z_j$ according to probability $\pi=(\pi_1,\ldots,\pi_K)$. Here $\pi_k=P(z_j=k)$ is the prior probability that a unit belongs to class $k$. We have $\sum_k\pi_k = 1$.
 \end{assumption}
  
-\begin{assumption}Given unit's class label $z_j=k$, the effects $\beta_{j1},\beta_{j2},\ldots,\beta_{jR}$ are independent from unimodal distribution $g_{kr}$. 
+\begin{assumption}Given unit's class label $z_j=k$, the effects $\beta_{j1},\beta_{j2},\ldots,\beta_{jR}$ are independent from unimodal distribution $g_{kr}$, that is $p(\beta_{j}|z_j =k,\hat s)=\prod_{r=1}^R p(\beta_{jr}|z_j =k,\hat s)=\prod_{r=1}^Rg_{kr}( \beta_{jr};\hat s)$
 \end{assumption}
 
-Here we describe the simplest version of our model. First we assume the effect $\beta_{jr}$ is independent of their standard errors $\hat s_{jr}$. Then by Assumption 1 and 2, we have
+\begin{assumption} The effects $\beta_1,\beta_2,\ldots,\beta_n$ are independent given $\pi$ and $g$.
+\end{assumption}
+
+Here we describe the simplest version of our model. First we assume the effect $\beta_{jr}$ is independent of their standard errors $\hat s_{jr}$. Then by Assumption 1, 2 and 3, we have
 \begin{equation}
-p(\beta_j|\pi,g,\hat s) = \sum_{k=1}^K\pi_k\prod_{r=1}^R  g_{kr}(\beta_{jr}),
+p(\beta|\pi,g,\hat s) = \prod_{j=1}^np(\beta_j|\pi,g,\hat s) = \prod_{j=1}^n \left [\sum_{k=1}^K\pi_k\prod_{r=1}^R  g_{kr}(\beta_{jr})\right ]
+%p(\beta_j|\pi,g,\hat s) = \sum_{k=1}^K\pi_k\prod_{r=1}^R  g_{kr}(\beta_{jr}),
 \label{eq:1}
 \end{equation}
-where $g$ represents $\{g_{kr}|k = 1,\ldots,K$, $r=1,\ldots,R\}$. A simple way to implement the unimodal assumption (UA) is to assume that $g_{kr}$ is a mixture of a point mass at 0 and a mixture of $zero-mean$ normal distribution:
+
+where $g$ represents $\{g_{kr}|k = 1,\ldots,K$, $r=1,\ldots,R\}$. A simple way to implement the unimodal assumption (UA) is to assume that $g_{kr}$ is a mixture of a point mass at 0 and a mixture of $zero$-$mean$ normal distribution \cite{ash}:
 \begin{equation}
 g_{kr}(\cdot) =  w_0^{kr}\delta_0(\cdot)+\sum_{l=1}^L w_l^{kr}N(\cdot;0,\sigma_l^2),
 \label{eq:2}
 \end{equation}
-where $\delta_0(\cdot)$ denotes a point mass on 0, and $N(\cdot;\mu,\sigma^2)$ denotes the density of Normal distribution with mean $\mu$ and variance $\sigma^2$. Here we assume  $\sigma_1,\sigma_2,\ldots,\sigma_L$ are fixed positive numbers forming a wide and dense grid. 
+where $\delta_0(\cdot)$ denotes a point mass on 0, and $N(\cdot;\mu,\sigma^2)$ denotes the density of Normal distribution with mean $\mu$ and variance $\sigma^2$. Here we assume  $\sigma_1,\sigma_2,\ldots,\sigma_L$ are known and fixed positive numbers forming a wide and dense grid, which are built via a data-driven approach.
 
 For likelihood $p(\hat \beta|\beta,\hat s)$, we assume a Normal approximation:
 \begin{equation}
@@ -66,20 +77,41 @@ p(\hat\beta|\pi,g,\hat s) &=& \prod_{j=1}^n\left[\sum_{k=1}^K\pi_k\prod_{r=1}^R(
 \end{eqnarray}
 Here $N_{jr}$ denotes $N(\cdot;0,\hat s_{jr}^2)$ and $*$ means the convolution of two functions. We define $\sigma_0:=0$.
 
-Model (\ref{eq:4}) is the extension of original Cormotif: set $L=1$ and assume $\hat s_{jr}^2$s are identical for all $j$, (\ref{eq:4}) is just Cormotif under Normal distribution. Similar to Cormotif, our model can capture the correlation among multiple studies. To see this, consider the likelihood for unit $j$. Based on our model, $p(\hat\beta_j|\pi,g,\hat s) = \sum_{k=1}^K\pi_k\prod_{r=1}^R(g_{kr}*N_{jr})(\hat\beta_{jr})$. The distribution for unit $j$ under study $r$ is $p(\hat\beta_{jr}|\pi,g,\hat s) = \sum_{k=1}^K\pi_k(g_{kr}*N_{jr})(\hat\beta_{jr})$. It is clear that $p(\hat\beta_j|\pi,g,\hat s) \neq \prod_{r=1}^Rp(\hat\beta_{jr}|\pi,g,\hat s)$, so different studies are dependent. 
+Model (\ref{eq:4}) is the extension of original  \textit{Cormotif}: set $L=1$ and assume for any fixed $r$, $\hat s_{jr}^2$s are identical for all $j$, (\ref{eq:4}) is just Cormotif under Normal distribution. Similar to Cormotif, our model can capture the correlation among multiple studies. To see this, consider the likelihood for unit $j$. Based on our model, $p(\hat\beta_j|\pi,g,\hat s) = \sum_{k=1}^K\pi_k\prod_{r=1}^R(g_{kr}*N_{jr})(\hat\beta_{jr})$. The distribution for unit $j$ under study $r$ is $p(\hat\beta_{jr}|\pi,g,\hat s) = \sum_{k=1}^K\pi_k(g_{kr}*N_{jr})(\hat\beta_{jr})$. It is clear that $p(\hat\beta_j|\pi,g,\hat s) \neq \prod_{r=1}^Rp(\hat\beta_{jr}|\pi,g,\hat s)$, so different studies are dependent. 
+
+When setting $K =1$, our model is equivalent to applying {\tt ash} \cite{ash} to each study separately. The advantage of our model is that it allows correlations among studies. This advantage leads to higher accuracy for effect estimation in multiple studies. 
 
 Another advantage of our generic model is that we could compute the posterior distribution for effects $\beta_{jr}$. By Bayes theorem, we have
 \begin{equation}
     p(\beta_{jr}|\hat\beta_{jr},\hat s_{jr}) \propto p(\beta_{jr}|\hat s_{jr})p(\hat\beta_{jr}|\beta_{jr},\hat s_{jr})
+    \label{eq:5}
 \end{equation}
 
 \subsection{Fitting the model}
+
+Our method involves three steps:
+\begin{enumerate}
+    \item For a given $K$, estimate the parameters $\pi$ and $g$ by maximizing the likelihood $L(\pi,g)$, given by (\ref{eq:4}).
+    \item Choose the best $K$ by minimizing the Bayesian Information Criterion (BIC).
+    \item Compute, for each $j$ and $r$, the posterior distribution $p(\beta_{jr}|\hat\beta_{jr},\hat s_{jr},\hat\pi,\hat g)$ by (\ref{eq:5}).
+\end{enumerate}
+
+All the details can be found in Section (\ref{sec:detail}). Step 1 is a convex problem, and we apply a EM algorithm to solve it. Step 2 is straightforward. The conditional distributions $p(\beta_{jr}|\hat\beta_{jr},\hat s_{jr},\hat\pi,\hat g)$ by (\ref{eq:5}) in Step 3 are analytically available, each a mixture of a point mass on zero and $L$ normal distribution. 
+
+\subsection{Local False Sign Rate}
+
+To measure "significance" of an effect $\beta_{jr}$ we use the local false sign rate ($\lfsr$), which is defined as:
+\begin{equation}
+    \lfsr_{jr} := \min\{p(\beta_{jr}\geq 0|\hat\beta_{jr},\hat s_{jr},\hat\pi,\hat g), p(\beta_{jr}\leq 0|\hat\beta_{jr},\hat s_{jr},\hat\pi,\hat g)\}
+\end{equation}
+
+Intutively, $\lfsr_{jr}$ is the probability that we would get the sign of effect $\beta_{jr}$ incorrect if we were to use our best guess of the sign. Therefore, a small $\lfsr$ indicates high confidence in determining the sign of an effect. Notice that $\lfsr$ is more conservative than the local false discovery rate ($\lfdr$), since we can infer $\lfsr_{jr}\geq\lfdr_{jr}$ from the definition. 
 
 \section{Detailed Method}
 
 \subsection{Embellishments}
 
-\subsection{Implementation Details}
+\subsection{Implementation Details} \label{sec:detail}
 
 \subsubsection{Optimization}
 This section We presents the EM algorithm used to estimate both $\pi$ and $g$. First compute the log likelihood function for $\hat\beta$ and group label $z=(z_1,\ldots,z_n)'$:
@@ -132,5 +164,44 @@ Here $K-1$ is the number of parameters for $\pi$, $K\times R\times L$ is the num
 \begin{equation}
 \hat K = \argmin_{K\geq1} {\rm BIC}(K).
 \end{equation}
+
+\subsubsection{Posterior distribution}
+
+For a more general case, suppose
+\begin{equation}
+g_{kr}(\cdot;w) = \sum_{l=0}^L w_l^{kr}f_l(\cdot),
+\label{eq:geng}
+\end{equation}
+where $f_0$ is a point mass on 0. Then we have 
+\begin{equation}
+    p(\beta_{jr}|\pi,g,\hat s) = \sum_{k=1}^K\pi_k g_{kr}(\beta_{jr})=  \sum_{k=1}^K\pi_k\sum_{l=0}^Lw_l^{kr}f_l(\beta_{jr})
+    = \sum_{l=0}^L\eta_{lr}f_l(\beta_{jr}),
+\end{equation}
+where $\eta_{lr}=\sum_{k=1}^K\pi_kw_l^{kr}$. Thus, by (\ref{eq:5}), we get
+\begin{equation}
+    p(\beta_{jr}|\hat\beta_{jr},\hat s_{jr},\pi, g) = \sum_{l=0}^L\theta_{ljr}p_{l}(\beta_{jr}|\hat\beta_{jr},\hat s_{jr}).
+\end{equation}
+The posterior mixture component $p_l$ is the posterior on $\beta_{jr}$ that would be obtained using prior $f_l(\beta_{jr})$ and likelihood $p(\hat\beta_{jr}|\beta_{jr},\hat s_{jr})$. To compute the mixture weights $\theta_{ljr}$, denote
+\begin{equation}
+    \tilde f_{ljr}(\hat\beta_{jr}) := \int f_l(\beta_{jr})p(\hat\beta_{jr}|\beta_{jr},\hat s_{jr})d\beta_{jr},
+\end{equation}
+the convolution of $f_l$ and a density function. Then $\theta_{ljr}$ can be obtained from
+\begin{equation}
+    \theta_{ljr} = \frac{\eta_{lr}\tilde f_{ljr}(\hat\beta_{jr})}{\sum_{l'=0}^L\eta_{l'r}\tilde f_{l'jr}(\hat\beta_{jr})}.
+\end{equation}
+
+\begin{thebibliography}{99}
+
+\bibitem{cormotif} 
+Wei, Y. and Ji, H. (2014). Joint analysis of differential gene expression in multiple studies using correlation motif. {\it Biostatistics}, doi:10.1093/biostatistics/
+kxu038.
+
+\bibitem{ash} 
+Stephens, M. (2016). False discovery rate: A new deal. {\it Biostatistics} 18 (2): 275-294
+
+\bibitem{mash}
+Urbut, S.M., Wang, G. and Stephens, M. (2017). Flexible statistical methods for estimating and testing effects in genomic studies with multiple conditions. {\it bioRxiv}, doi:10.1101/096552.
+
+\end{thebibliography}
 
 \end{document}
