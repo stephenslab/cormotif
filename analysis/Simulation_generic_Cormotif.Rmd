@@ -30,9 +30,9 @@ knitr::read_chunk("chunks.R")
 knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
 ```
 
-### Simulation 
+## Simulation 
 
-We set unit number $n = 5000$, and study number $R = 4$. We set every observation has the same standard error, $s_{jr}=1$. That is $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 5000 units come from 4 patterns ($K=4$): 2000 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4$; 1000 units have effect $\beta_{jr}\sim N(0,10^2)$ for $r =1, 2$ and $\beta_{jr}=0$ for $r =3, 4$; 1000 units have effect $\beta_{jr}\sim N(0,10^2)$ for $r =2, 3$ and $\beta_{jr}=0$ for $r =1, 4$; 2000 genes have effect $\beta_{jr}\sim N(0,10^2)$ for $r =1, 2,3,4$. 
+We set unit number $n = 5000$, and study number $R = 4$. We set every observation has the same standard error, $s_{jr}=1$. That is $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 5000 units come from 4 patterns ($K=4$): 2000 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4$; 1000 units have effect $\beta_{jr}\sim N(0,10^2)$ for $r =1, 2$ and $\beta_{jr}=0$ for $r =3, 4$; 1000 units have effect $\beta_{jr}\sim N(0,10^2)$ for $r =2, 3$ and $\beta_{jr}=0$ for $r =1, 4$; 1000 unitss have effect $\beta_{jr}\sim N(0,10^2)$ for $r =1, 2,3,4$. 
 
 ```{r,cache=TRUE}
 source('~/Git/cormotif/code/function.R')
@@ -108,13 +108,13 @@ fit$bestmotif$W[[4]]
 
 All of them matches well with our setting, which verifies our algorithm.
 
-Also, we could compute the \textit{lfdr}: 
+Also, we could compute the lfdr: 
 
 ```{r,cache=TRUE}
 head(cbind(fit$result[[1]]$lfdr,fit$result[[2]]$lfdr,fit$result[[3]]$lfdr,fit$result[[4]]$lfdr))
 ```
 
-And \textit{lfsr}:
+And lfsr:
 
 ```{r,cache=TRUE}
 head(cbind(fit$result[[1]]$lfsr,fit$result[[2]]$lfsr,fit$result[[3]]$lfsr,fit$result[[4]]$lfsr))
