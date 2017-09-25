@@ -315,11 +315,11 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-09-24</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 284168b</p>
+<p><strong>Code version:</strong> 9780c14</p>
 <!-- Add your analysis here -->
-<div id="simulation" class="section level3">
-<h3>Simulation</h3>
-<p>We set unit number <span class="math inline">\(n = 5000\)</span>, and study number <span class="math inline">\(R = 4\)</span>. We set every observation has the same standard error, <span class="math inline">\(s_{jr}=1\)</span>. That is <span class="math inline">\(\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)\)</span>. The 5000 units come from 4 patterns (<span class="math inline">\(K=4\)</span>): 2000 units have zero effects in all four studies, that is <span class="math inline">\(\beta_{jr}=0\)</span>, for <span class="math inline">\(r = 1,2,3,4\)</span>; 1000 units have effect <span class="math inline">\(\beta_{jr}\sim N(0,10^2)\)</span> for <span class="math inline">\(r =1, 2\)</span> and <span class="math inline">\(\beta_{jr}=0\)</span> for <span class="math inline">\(r =3, 4\)</span>; 1000 units have effect <span class="math inline">\(\beta_{jr}\sim N(0,10^2)\)</span> for <span class="math inline">\(r =2, 3\)</span> and <span class="math inline">\(\beta_{jr}=0\)</span> for <span class="math inline">\(r =1, 4\)</span>; 2000 genes have effect <span class="math inline">\(\beta_{jr}\sim N(0,10^2)\)</span> for <span class="math inline">\(r =1, 2,3,4\)</span>.</p>
+<div id="simulation" class="section level2">
+<h2>Simulation</h2>
+<p>We set unit number <span class="math inline">\(n = 5000\)</span>, and study number <span class="math inline">\(R = 4\)</span>. We set every observation has the same standard error, <span class="math inline">\(s_{jr}=1\)</span>. That is <span class="math inline">\(\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)\)</span>. The 5000 units come from 4 patterns (<span class="math inline">\(K=4\)</span>): 2000 units have zero effects in all four studies, that is <span class="math inline">\(\beta_{jr}=0\)</span>, for <span class="math inline">\(r = 1,2,3,4\)</span>; 1000 units have effect <span class="math inline">\(\beta_{jr}\sim N(0,10^2)\)</span> for <span class="math inline">\(r =1, 2\)</span> and <span class="math inline">\(\beta_{jr}=0\)</span> for <span class="math inline">\(r =3, 4\)</span>; 1000 units have effect <span class="math inline">\(\beta_{jr}\sim N(0,10^2)\)</span> for <span class="math inline">\(r =2, 3\)</span> and <span class="math inline">\(\beta_{jr}=0\)</span> for <span class="math inline">\(r =1, 4\)</span>; 1000 unitss have effect <span class="math inline">\(\beta_{jr}\sim N(0,10^2)\)</span> for <span class="math inline">\(r =1, 2,3,4\)</span>.</p>
 <pre class="r"><code>source(&#39;~/Git/cormotif/code/function.R&#39;)
 K = 4
 D = 4
@@ -362,9 +362,9 @@ fit = generic.cormotif(betahat,sebetahat,K=1:5)</code></pre>
 <p>The estimated <span class="math inline">\(w\)</span> for studies 4 is</p>
 <pre class="r"><code>fit$bestmotif$W[[4]]</code></pre>
 <p>All of them matches well with our setting, which verifies our algorithm.</p>
-<p>Also, we could compute the :</p>
+<p>Also, we could compute the lfdr:</p>
 <pre class="r"><code>head(cbind(fit$result[[1]]$lfdr,fit$result[[2]]$lfdr,fit$result[[3]]$lfdr,fit$result[[4]]$lfdr))</code></pre>
-<p>And :</p>
+<p>And lfsr:</p>
 <pre class="r"><code>head(cbind(fit$result[[1]]$lfsr,fit$result[[2]]$lfsr,fit$result[[3]]$lfsr,fit$result[[4]]$lfsr))</code></pre>
 </div>
 <div id="session-information" class="section level2">
