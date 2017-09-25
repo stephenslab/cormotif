@@ -315,7 +315,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-09-25</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> d62ca30</p>
+<p><strong>Code version:</strong> f3fbefb</p>
 <!-- Add your analysis here -->
 <div id="simulation" class="section level2">
 <h2>Simulation</h2>
@@ -345,16 +345,32 @@ for(g in 1:G){
   }
 }
 betahat=X
-sebetahat=matrix(1,nrow=G,ncol=D)
-fit = generic.cormotif(betahat,sebetahat,K=1:5)</code></pre>
+sebetahat=matrix(1,nrow=G,ncol=D)</code></pre>
+<pre class="r"><code>fit = generic.cormotif(betahat,sebetahat,K=1:5)</code></pre>
+<pre><code>[1] &quot;We have run the first 5 iterations for K=2&quot;
+[1] &quot;We have run the first 10 iterations for K=2&quot;
+[1] &quot;We have run the first 15 iterations for K=2&quot;
+[1] &quot;We have run the first 20 iterations for K=2&quot;
+[1] &quot;We have run the first 5 iterations for K=3&quot;
+[1] &quot;We have run the first 10 iterations for K=3&quot;
+[1] &quot;We have run the first 15 iterations for K=3&quot;
+[1] &quot;We have run the first 20 iterations for K=3&quot;
+[1] &quot;We have run the first 5 iterations for K=4&quot;
+[1] &quot;We have run the first 10 iterations for K=4&quot;
+[1] &quot;We have run the first 15 iterations for K=4&quot;
+[1] &quot;We have run the first 5 iterations for K=5&quot;
+[1] &quot;We have run the first 10 iterations for K=5&quot;
+[1] &quot;We have run the first 15 iterations for K=5&quot;
+[1] &quot;We have run the first 20 iterations for K=5&quot;
+[1] &quot;We have run the first 25 iterations for K=5&quot;</code></pre>
 <p>After fitting the generic cormotif model, we can check the BIC values obtained by all cluster numbers:</p>
 <pre class="r"><code>fit$bic</code></pre>
 <pre><code>     K      bic
-[1,] 1 167015.5
-[2,] 2 113974.4
-[3,] 3 115765.0
-[4,] 4 115352.9
-[5,] 5 117118.7</code></pre>
+[1,] 1 110390.8
+[2,] 2 107923.6
+[3,] 3 107999.1
+[4,] 4 108781.0
+[5,] 5 108653.0</code></pre>
 <p><span class="math inline">\(K = 4\)</span> has the smallest BIC. The standard deviation <span class="math inline">\(\sigma_0,\sigma_1,\ldots,\sigma_L\)</span> built by our method is</p>
 <pre class="r"><code>fit$mixsd</code></pre>
 <pre><code> [1]  0.00000000  0.07964074  0.11262901  0.15928147  0.22525802
@@ -364,82 +380,76 @@ fit = generic.cormotif(betahat,sebetahat,K=1:5)</code></pre>
 [21] 57.66605358 81.55211506</code></pre>
 <p>And the estimated <span class="math inline">\(\pi\)</span> for <span class="math inline">\(K = 4\)</span> is</p>
 <pre class="r"><code>fit$bestmotif$pi</code></pre>
-<pre><code>[1] 0.3194546 0.6805454</code></pre>
+<pre><code>[1] 0.4136999 0.5863001</code></pre>
 <p>Then we could check the estimation for <span class="math inline">\(g\)</span>, i.e. the values of <span class="math inline">\(w\)</span>. The estimated <span class="math inline">\(w\)</span> for studies 1 is</p>
 <pre class="r"><code>fit$bestmotif$W[[1]]</code></pre>
-<pre><code>            [,1]         [,2]         [,3]         [,4]         [,5]
-[1,] 0.997712680 0.0001455164 0.0001053382 5.466167e-05 1.412192e-05
-[2,] 0.003512745 0.0017458486 0.0777712195 1.800698e-01 9.669754e-02
-             [,6]         [,7]         [,8] [,9] [,10] [,11]       [,12]
-[1,] 7.806663e-07 7.805686e-10 9.993113e-16    0     0     0 0.000000000
-[2,] 1.694876e-04 2.579050e-16 0.000000e+00    0     0     0 0.009267367
-     [,13] [,14]        [,15]      [,16]        [,17]        [,18] [,19]
-[1,]     0     0 6.072626e-19 0.00174506 0.0002218315 8.530316e-09     0
-[2,]     0     0 9.443066e-02 0.53387873 0.0000000000 2.456600e-03     0
-     [,20]        [,21]        [,22]
-[1,]     0 5.752152e-11 1.029627e-10
-[2,]     0 0.000000e+00 0.000000e+00</code></pre>
+<pre><code>          [,1]         [,2]         [,3]         [,4]         [,5]
+[1,] 0.9684620 0.0001392743 9.921738e-05 4.954542e-05 1.149886e-05
+[2,] 0.3292819 0.0027860516 1.942720e-03 8.393232e-07 8.379963e-13
+             [,6] [,7] [,8] [,9] [,10] [,11] [,12]        [,13] [,14]
+[1,] 4.271996e-07    0    0    0     0     0     0 0.000000e+00     0
+[2,] 2.655653e-13    0    0    0     0     0     0 1.103562e-13     0
+        [,15]      [,16]        [,17]       [,18] [,19] [,20] [,21] [,22]
+[1,] 0.000000 0.03123751 5.694416e-07 0.000000000     0     0     0     0
+[2,] 0.114192 0.54872237 0.000000e+00 0.003074088     0     0     0     0</code></pre>
 <p>The estimated <span class="math inline">\(w\)</span> for studies 2 is</p>
 <pre class="r"><code>fit$bestmotif$W[[2]]</code></pre>
-<pre><code>             [,1]         [,2]         [,3]         [,4]         [,5]
-[1,] 9.707112e-01 0.0001657242 0.0001412703 0.0001035379 5.758528e-05
-[2,] 3.227657e-05 0.0062652122 0.0005631435 0.0106535015 4.135436e-03
-             [,6]         [,7]         [,8]         [,9]      [,10]
-[1,] 2.054778e-05 4.698060e-06 2.231281e-06 9.348685e-05 0.02528274
-[2,] 1.568009e-02 2.322818e-03 2.787583e-04 4.772477e-05 0.01014327
-          [,11] [,12]        [,13]        [,14] [,15]       [,16]
-[1,] 0.00000000     0 1.723807e-13 5.410466e-15     0 0.002431154
-[2,] 0.02573666     0 0.000000e+00 0.000000e+00     0 0.924141070
-            [,17] [,18] [,19] [,20]        [,21]      [,22]
-[1,] 9.857952e-04     0     0     0 0.000000e+00 0.0000e+00
-[2,] 2.660258e-18     0     0     0 4.674886e-08 3.9013e-10</code></pre>
+<pre><code>          [,1]         [,2]         [,3]         [,4]         [,5]
+[1,] 0.9997909 0.0001099325 6.006229e-05 1.780206e-05 1.506575e-06
+[2,] 0.0000000 0.0000000000 0.000000e+00 0.000000e+00 0.000000e+00
+             [,6]         [,7] [,8] [,9] [,10]        [,11] [,12] [,13]
+[1,] 8.190983e-09 2.202682e-13    0    0     0 0.000000e+00     0     0
+[2,] 0.000000e+00 0.000000e+00    0    0     0 1.230457e-06     0     0
+     [,14] [,15]        [,16]        [,17] [,18] [,19] [,20] [,21]
+[1,]     0     0 4.778274e-09 1.983248e-05     0     0     0     0
+[2,]     0     0 9.999988e-01 0.000000e+00     0     0     0     0
+            [,22]
+[1,] 0.000000e+00
+[2,] 2.241273e-09</code></pre>
 <p>The estimated <span class="math inline">\(w\)</span> for studies 3 is</p>
 <pre class="r"><code>fit$bestmotif$W[[3]]</code></pre>
-<pre><code>           [,1]         [,2]         [,3]         [,4]         [,5]
-[1,] 0.99814354 0.0001110942 6.100919e-05 1.787133e-05 1.342718e-06
-[2,] 0.00269215 0.0015185706 3.355099e-02 7.162697e-02 1.820633e-01
-             [,6]         [,7] [,8] [,9]        [,10] [,11]        [,12]
-[1,] 3.619161e-09 9.888663e-16    0    0 2.873809e-15     0 3.004978e-15
-[2,] 7.755758e-02 7.108437e-10    0    0 0.000000e+00     0 0.000000e+00
-     [,13] [,14]        [,15]       [,16]        [,17]        [,18] [,19]
-[1,]     0     0 0.0002506798 0.001146629 0.0002678262 0.000000e+00     0
-[2,]     0     0 0.0407450861 0.590244149 0.0000000000 1.178579e-06     0
-            [,20]        [,21]        [,22]
-[1,] 1.214525e-19 0.000000e+00 4.458522e-16
-[2,] 0.000000e+00 1.016428e-08 0.000000e+00</code></pre>
+<pre><code>             [,1]         [,2]         [,3]         [,4]         [,5]
+[1,] 9.772661e-01 6.869083e-05 2.364516e-05 2.651390e-06 2.535688e-08
+[2,] 2.493117e-12 3.090195e-12 3.863827e-08 4.164135e-03 3.283099e-01
+             [,6]         [,7] [,8] [,9] [,10] [,11] [,12] [,13] [,14]
+[1,] 1.008083e-13 1.310063e-14    0    0     0     0     0     0     0
+[2,] 1.389777e-12 0.000000e+00    0    0     0     0     0     0     0
+           [,15]        [,16]      [,17] [,18] [,19] [,20] [,21] [,22]
+[1,] 0.009800714 5.884893e-11 0.01283817     0     0     0     0     0
+[2,] 0.047737142 6.197887e-01 0.00000000     0     0     0     0     0</code></pre>
 <p>The estimated <span class="math inline">\(w\)</span> for studies 4 is</p>
 <pre class="r"><code>fit$bestmotif$W[[4]]</code></pre>
 <pre><code>             [,1]         [,2]         [,3]         [,4]         [,5]
-[1,] 9.996233e-01 1.490116e-04 1.096842e-04 5.789534e-05 1.437765e-05
-[2,] 1.045759e-05 4.363306e-05 7.602932e-06 0.000000e+00 4.497947e-01
-             [,6]         [,7]         [,8]         [,9] [,10] [,11] [,12]
-[1,] 4.934489e-07 7.119034e-13 1.312051e-14 7.751606e-13     0     0     0
-[2,] 2.455320e-01 4.750286e-05 0.000000e+00 0.000000e+00     0     0     0
-     [,13]        [,14] [,15]       [,16]        [,17]        [,18] [,19]
-[1,]     0 5.388477e-10     0 4.52794e-05 1.265661e-09 0.000000e+00     0
-[2,]     0 0.000000e+00     0 3.04564e-01 0.000000e+00 5.963426e-08     0
-     [,20] [,21]        [,22]
-[1,]     0     0 1.762997e-09
-[2,]     0     0 0.000000e+00</code></pre>
+[1,] 9.996740e-01 1.478403e-04 1.079539e-04 5.606764e-05 1.347741e-05
+[2,] 9.464207e-12 1.555878e-08 1.134612e-06 2.247058e-01 4.441283e-01
+             [,6] [,7] [,8] [,9] [,10]        [,11] [,12]        [,13]
+[1,] 4.357345e-07    0    0    0     0 4.440892e-16     0 2.220446e-16
+[2,] 1.979084e-12    0    0    0     0 0.000000e+00     0 0.000000e+00
+            [,14] [,15]        [,16] [,17] [,18] [,19]        [,20] [,21]
+[1,] 9.536816e-13     0 2.222062e-07     0     0     0 0.000000e+00     0
+[2,] 5.799556e-03     0 3.253652e-01     0     0     0 2.220446e-16     0
+     [,22]
+[1,]     0
+[2,]     0</code></pre>
 <p>All of them matches well with our setting, which verifies our algorithm.</p>
 <p>Also, we could compute the lfdr:</p>
 <pre class="r"><code>head(cbind(fit$result[[1]]$lfdr,fit$result[[2]]$lfdr,fit$result[[3]]$lfdr,fit$result[[4]]$lfdr))</code></pre>
 <pre><code>             [,1]         [,2]         [,3]          [,4]
-[1,] 2.451265e-01 1.958505e-02 5.211452e-02 1.121548e-114
-[2,] 4.171511e-01 5.762959e-01 1.544834e-48  1.072466e-21
-[3,] 2.225264e-19 2.500033e-05 4.125273e-01  3.988194e-03
-[4,] 8.621561e-74 2.065374e-03 1.161664e-13  7.598294e-53
-[5,] 5.095014e-01 7.549790e-03 8.760212e-31  1.944957e-02
-[6,] 1.009988e-02 1.149260e-02 3.785388e-01  3.592777e-01</code></pre>
+[1,] 4.708891e-01 2.949257e-02 6.971221e-02 1.578236e-114
+[2,] 7.642519e-01 7.296594e-01 2.100488e-48  1.496472e-21
+[3,] 4.392014e-19 3.618572e-05 5.113544e-01  5.466735e-03
+[4,] 1.720915e-73 3.051235e-03 1.573818e-13  1.068014e-52
+[5,] 9.033644e-01 1.127543e-02 1.190165e-30  2.668662e-02
+[6,] 2.023884e-02 1.722893e-02 4.728131e-01  4.661793e-01</code></pre>
 <p>And lfsr:</p>
 <pre class="r"><code>head(cbind(fit$result[[1]]$lfsr,fit$result[[2]]$lfsr,fit$result[[3]]$lfsr,fit$result[[4]]$lfsr))</code></pre>
-<pre><code>             [,1]         [,2]          [,3]         [,4]
-[1,] 3.194045e-01 2.068620e-02  6.549196e-02 1.110223e-16
-[2,] 5.546911e-01 6.284095e-01 -2.220446e-16 0.000000e+00
-[3,] 0.000000e+00 2.607581e-05  5.421212e-01 5.503719e-03
-[4,] 9.451066e-74 2.169011e-03  1.340418e-13 0.000000e+00
-[5,] 7.007077e-01 7.952403e-03  0.000000e+00 2.726890e-02
-[6,] 1.274547e-02 1.211928e-02  4.944304e-01 5.565176e-01</code></pre>
+<pre><code>             [,1]         [,2]         [,3]        [,4]
+[1,] 4.767981e-01 2.995076e-02 8.075729e-02 0.000000000
+[2,] 7.760727e-01 7.514190e-01 0.000000e+00 0.000000000
+[3,] 0.000000e+00 3.657765e-05 6.117395e-01 0.006968919
+[4,] 1.725120e-73 3.091853e-03 1.718527e-13 0.000000000
+[5,] 9.234564e-01 1.143843e-02 0.000000e+00 0.034386627
+[6,] 2.042501e-02 1.748566e-02 5.631303e-01 0.641537681</code></pre>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
@@ -459,11 +469,19 @@ locale:
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
+other attached packages:
+[1] SQUAREM_2016.8-2
+
 loaded via a namespace (and not attached):
- [1] compiler_3.4.1  backports_1.1.0 magrittr_1.5    rprojroot_1.2  
- [5] tools_3.4.1     htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.12   
- [9] stringi_1.1.5   rmarkdown_1.6   knitr_1.17      git2r_0.19.0   
-[13] stringr_1.2.0   digest_0.6.12   evaluate_0.10.1</code></pre>
+ [1] Rcpp_0.12.12       lattice_0.20-35    codetools_0.2-15  
+ [4] digest_0.6.12      rprojroot_1.2      MASS_7.3-47       
+ [7] grid_3.4.1         MatrixModels_0.4-1 backports_1.1.0   
+[10] git2r_0.19.0       magrittr_1.5       coda_0.19-1       
+[13] evaluate_0.10.1    stringi_1.1.5      SparseM_1.77      
+[16] Matrix_1.2-10      rmarkdown_1.6      tools_3.4.1       
+[19] stringr_1.2.0      yaml_2.1.14        compiler_3.4.1    
+[22] mcmc_0.9-5         htmltools_0.3.6    knitr_1.17        
+[25] quantreg_5.33      MCMCpack_1.4-0    </code></pre>
 </div>
 
 <hr>
