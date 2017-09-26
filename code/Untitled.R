@@ -17,10 +17,12 @@ control = list()
 lik = NULL
 weights=NULL
 pi_thresh = 1e-10
+BIC=TRUE
+mess = TRUE
 
-n = 2000
-R = 5
-K = 3
+n = 1000
+R = 4
+K = 4
 
 #betahat = matrix(rnorm(n*R,0,sqrt(5)),ncol=R)
 betahat = matrix(0,nrow=n,ncol=R)
@@ -153,11 +155,15 @@ for(r in 1:R){
   matrix_llik[[r]] =  t(log_comp_dens_conv(g,data))
 }
 
+
+
+
+## sim1
 K = 4
 D = 4
-G = 5000
-sigma2 = c(100,100,100,100)
-pi0 = c(0.2,0.2,0.2,0.4)
+G = 1000
+sigma2 = c(16,16,16,16)
+pi0 = c(0.02,0.04,0.04,0.9)
 q0 = matrix(0,nrow=K,ncol=D)
 q0[1,] = c(1,1,1,1)
 q0[2,] = c(1,1,0,0)
@@ -179,6 +185,54 @@ for(g in 1:G){
 betahat=X
 sebetahat=matrix(1,nrow=G,ncol=D)
 
+## sim 2
+K = 4
+D = 4
+G = 5000
+sigma2 = c(16,16,16,16)
+pi0 = c(0.03,0.03,0.03,0.91)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,0,1,1)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(4)
+for(g in 1:G){
+  for(d in 1:D){
+    if(A[g,d]==1){
+      X[g,d] = rnorm(1,0,sqrt(1+sigma2[d]))
+    } else{
+      X[g,d] = rnorm(1,0,1)
+    }
+  }
+}
+betahat=X
+sebetahat=matrix(1,nrow=G,ncol=D)
 
-
-
+## sim3
+K = 5
+D = 8
+G = 10000
+sigma2 = rep(16,D)
+pi0 = c(0.02,0.02,0.02,0.02,0.92)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1,1,1,1,1)
+q0[2,] = c(1,1,1,1,0,0,0,0)
+q0[3,] = c(0,0,0,0,1,1,1,1)
+q0[4,] = c(0,0,1,1,1,1,0,0)
+q0[5,] = c(0,0,0,0,0,0,0,0)
+X = matrix(0,nrow=G,ncol=D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+for(g in 1:G){
+  for(d in 1:D){
+    if(A[g,d]==1){
+      X[g,d] = rnorm(1,0,sqrt(1+sigma2[d]))
+    } else{
+      X[g,d] = rnorm(1,0,1)
+    }
+  }
+}

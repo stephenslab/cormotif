@@ -37,13 +37,14 @@ generic.cormotif=function(betahat,sebetahat,mixcompdist = "normal",optmethod = "
   L = length(mixsd)
   null.comp = which.min(mixsd)
   w = initpi(L,n,null.comp)
+  if(mixcompdist == "normal") g=normalmix(w,rep(mode,L),mixsd)
   
   # compute conv_dens matrix
   matrix_llik = list()
+  data = list()
   for(r in 1:R){
-    data = set_data(betahat[,r], sebetahat[,r], lik, alpha)
-    if(mixcompdist == "normal") g=normalmix(w,rep(mode,L),mixsd)
-    matrix_llik[[r]] =  t(log_comp_dens_conv(g,data))
+    data[[r]] = set_data(betahat[,r], sebetahat[,r], lik, alpha)
+    matrix_llik[[r]] =  t(log_comp_dens_conv(g,data[[r]]))
   }
   
   ## fit the model via EM 
@@ -66,25 +67,25 @@ generic.cormotif=function(betahat,sebetahat,mixcompdist = "normal",optmethod = "
     bestflag=which(aic==min(aic))
   }
   bestmotif=fitresult[[bestflag]]
-  ## output
-  output = set_output(outputlevel) #sets up flags for what to output
-  resfns = set_resfns(output)
-  result = list()
-  if(length(resfns)>0){
-    for(r in 1:R){
-      data = set_data(betahat[,r], sebetahat[,r], lik, alpha)
-      what = t(bestmotif$W[[r]])%*%bestmotif$pi
-      if(mixcompdist == "normal") ghat=normalmix(what,rep(mode,L),mixsd)
-      result[[r]] = as.data.frame(lapply(resfns,do.call,list(g=prune(ghat,pi_thresh),data=data)))
-    }
-   
-  }
-  
+  ## lfdr and lsdr
+  ds = comp_lfdsr(bestmotif, g, data)
+  # output = set_output(outputlevel) #sets up flags for what to output
+  # resfns = set_resfns(output)
+  # result = list()
+  # if(length(resfns)>0){
+  #   for(r in 1:R){
+  #     data = set_data(betahat[,r], sebetahat[,r], lik, alpha)
+  #     what = t(bestmotif$W[[r]])%*%bestmotif$pi
+  #     if(mixcompdist == "normal") ghat=normalmix(what,rep(mode,L),mixsd)
+  #     result[[r]] = as.data.frame(lapply(resfns,do.call,list(g=prune(ghat,pi_thresh),data=data)))
+  #   }
+  #  
+  # }
   return(list(bestmotif=fitresult[[bestflag]],bic=cbind(K,bic),
-                aic=cbind(K,aic),loglike=cbind(K,loglike),mixsd=mixsd,allmotif=fitresult,result=result))
+                aic=cbind(K,aic),loglike=cbind(K,loglike),mixsd=mixsd,allmotif=fitresult,lfdr=ds$lfdr,lfsr=ds$lfsr))
 }
 
-gcmfit = function(matrix_llik,K=1,max.iter=300,tol = 1e-3,w_init,pi_thresh,mess=TRUE){
+gcmfit = function(matrix_llik,K=1,max.iter=300,tol = 1e-4,w_init,pi_thresh,mess=TRUE){
   R = length(matrix_llik)
   n =  dim(matrix_llik[[1]])[1]
   L = dim(matrix_llik[[1]])[2]
@@ -122,9 +123,10 @@ gcmfit = function(matrix_llik,K=1,max.iter=300,tol = 1e-3,w_init,pi_thresh,mess=
     matrix_llik2 = clustlike
     tempmax = apply(matrix_llik2,1,max)
     matrix_lik2 = exp(matrix_llik2-tempmax)
-    fit.p=mixEM(matrix_lik=matrix_lik2, prior=rep(1,K),pi_init = p)
+    fit.p=mixEM(matrix_lik=matrix_lik2, prior=1,pi_init = p)
     p.new = fit.p$pihat
     #print(p.new)
+    
     ## update W
     ### compute p_{jk}
     for(k in 1:K){
@@ -137,7 +139,9 @@ gcmfit = function(matrix_llik,K=1,max.iter=300,tol = 1e-3,w_init,pi_thresh,mess=
       clustlike[,k]<-clustlike[,k]/tempsum
     }
     clustlike[clustlike<pi_thresh] = 0
-    clustlike = t(apply(clustlike,1,normalize))
+    for(j in 1:n){
+      clustlike[j,] = normalize(clustlike[j,])
+    }
     W.new = W
     for(k in 1:K){
       for(r in 1:R){
@@ -147,12 +151,12 @@ gcmfit = function(matrix_llik,K=1,max.iter=300,tol = 1e-3,w_init,pi_thresh,mess=
           matrix_llik3 = matrix_llik[[r]]
           lnorm = apply(matrix_llik3,1,max)
           matrix_lik3 = exp(matrix_llik3 - lnorm)
-          fit.w = w_mixEM(matrix_lik=matrix_lik3, prior=rep(1,L),pi_init = W[[r]][k,],weights = ww)
+          fit.w = w_mixEM(matrix_lik=matrix_lik3, prior=1,pi_init = W[[r]][k,],weights = ww)
           W.new[[r]][k,] = fit.w$pihat
         }
       }
     }
-    # 
+    ## compute error
     err.p = max(abs(p.new-p))
     err.w = rep(0,R)
     for(r in 1:R){
@@ -169,11 +173,40 @@ gcmfit = function(matrix_llik,K=1,max.iter=300,tol = 1e-3,w_init,pi_thresh,mess=
     }
   }
   ## compute log-likelihood
-  loglike = penloglik(p,matrix_lik2,prior=rep(1,K))+sum(tempmax)
+  loglike = penloglik(p,matrix_lik2,prior=1)+sum(tempmax)
   BIC = -2*loglike+(K*R*(L-1)+K-1)*log(n)
   AIC = -2*loglike+2*(K*R*(L-1)+K-1)
-  return(list(pi=p,W=W,loglike=loglike,BIC=BIC,AIC=AIC))
+  return(list(K = K,pi=p,W=W,loglike=loglike,BIC=BIC,AIC=AIC,clustlike=clustlike))
 }
 
-#results = generic.cormotif(betahat,sebetahat,K=1:5)
+comp_lfdsr= function(bestmotif, g, data){
+  R = length(data)
+  n = length(data[[1]]$x)
+  L = length(g$pi)
+  K0 = bestmotif$K
+  W0 = bestmotif$W
+  clustlike0 = bestmotif$clustlike
+  lfdr = matrix(0,n,R)
+  lfsr = matrix(0,n,R)
+  Theta = array(0,dim=c(R,n,L))
+  for(r in 1:R){
+    we = array(0,dim=c(K0,n,L))
+    for(k in 1:K0){
+      g$pi = W0[[r]][k,]
+      we[k,,]= t(comp_postprob(g,data[[r]]))
+    }
+    for(j in 1:n){
+      if(K0>1) Theta[r,j,] = t(we[,j,])%*%clustlike0[j,]
+      else Theta[r,j,] = we[,j,]
+    }
+    lfdr[,r] = Theta[r,,1]
+    NegativeProb = rowSums(t(comp_cdf_post(g,0,data[[r]]))*Theta[r,,])-lfdr[,r]
+    lfsr[,r] = compute_lfsr(NegativeProb,lfdr[,r])
+  }
+  
+  list(lfdr=lfdr,lfsr=lfsr,Theta=Theta)
+}
+
+
+#results = generic.cormotif(betahat,sebetahat,K=4)
 
