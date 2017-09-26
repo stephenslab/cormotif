@@ -27,12 +27,16 @@ knitr::read_chunk("chunks.R")
 <!-- Add your analysis here -->
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,eval=TRUE)
+knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
 ```
 
 ## Simulation 
 
-We set unit number $n = 5000$, and study number $R = 4$. We set every observation has the same standard error, $s_{jr}=1$. That is $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 5000 units come from 4 patterns ($K=4$): 2000 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4$; 1000 units have effect $\beta_{jr}\sim N(0,10^2)$ for $r =1, 2$ and $\beta_{jr}=0$ for $r =3, 4$; 1000 units have effect $\beta_{jr}\sim N(0,10^2)$ for $r =2, 3$ and $\beta_{jr}=0$ for $r =1, 4$; 1000 unitss have effect $\beta_{jr}\sim N(0,10^2)$ for $r =1, 2,3,4$. 
+We set unit number $n = 5000$, and study number $R = 4$. We set every observation has the same standard error, $s_{jr}=1$. That is $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 5000 units come from 4 patterns ($K=4$): 4500 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4$; 200 units have effect $\beta_{jr}\sim N(0,10^2)$ for $r =1, 2$ and $\beta_{jr}=0$ for $r =3, 4$; 200 units have effect $\beta_{jr}\sim N(0,10^2)$ for $r =2, 3$ and $\beta_{jr}=0$ for $r =1, 4$; 100 unitss have effect $\beta_{jr}\sim N(0,10^2)$ for $r =1, 2,3,4$. 
+
+### Known $K$
+
+First assume we know $K=4$ and fit the model. 
 
 ```{r,cache=TRUE}
 source('~/Git/cormotif/code/function.R')
@@ -40,7 +44,7 @@ K = 4
 D = 4
 G = 5000
 sigma2 = c(100,100,100,100)
-pi0 = c(0.2,0.2,0.2,0.4)
+pi0 = c(0.02,0.04,0.04,0.9)
 q0 = matrix(0,nrow=K,ncol=D)
 q0[1,] = c(1,1,1,1)
 q0[2,] = c(1,1,0,0)
@@ -64,49 +68,45 @@ sebetahat=matrix(1,nrow=G,ncol=D)
 ```
 
 ```{r,cache=TRUE}
-fit = generic.cormotif(betahat,sebetahat,K=1:5)
+fit1 = generic.cormotif(betahat,sebetahat,K=4,mess=FALSE)
 ```
 
-After fitting the generic cormotif model, we can check the BIC values obtained by all cluster numbers:
+After fit the generic cormotif model, the standard deviation $\sigma_0,\sigma_1,\ldots,\sigma_L$ built by our method is 
 
 ```{r}
-fit$bic
+fit1$mixsd
 ```
 
-$K = 4$ has the smallest BIC. The standard deviation $\sigma_0,\sigma_1,\ldots,\sigma_L$ built by our method is 
+The estimated $\pi$ for $K = 4$ is 
 
 ```{r}
-fit$mixsd
+fit1$bestmotif$pi
 ```
 
-And the estimated $\pi$ for $K = 4$ is 
+Then we could check the estimation for $g$, i.e. the values of $w$, which is a $K\times L$ matrix. 
+
+The estimated $w$ for studies 1 is 
 
 ```{r}
-fit$bestmotif$pi
-```
-
-Then we could check the estimation for $g$, i.e. the values of $w$. The estimated $w$ for studies 1 is 
-
-```{r}
-fit$bestmotif$W[[1]]
+fit1$bestmotif$W[[1]]
 ```
 
 The estimated $w$ for studies 2 is 
 
 ```{r}
-fit$bestmotif$W[[2]]
+fit1$bestmotif$W[[2]]
 ```
 
 The estimated $w$ for studies 3 is 
 
 ```{r}
-fit$bestmotif$W[[3]]
+fit1$bestmotif$W[[3]]
 ```
 
 The estimated $w$ for studies 4 is 
 
 ```{r}
-fit$bestmotif$W[[4]]
+fit1$bestmotif$W[[4]]
 ```
 
 All of them matches well with our setting, which verifies our algorithm.
@@ -114,13 +114,65 @@ All of them matches well with our setting, which verifies our algorithm.
 Also, we could compute the lfdr: 
 
 ```{r}
-head(cbind(fit$result[[1]]$lfdr,fit$result[[2]]$lfdr,fit$result[[3]]$lfdr,fit$result[[4]]$lfdr))
+head(fit1$lfdr)
 ```
 
 And lfsr:
 
 ```{r}
-head(cbind(fit$result[[1]]$lfsr,fit$result[[2]]$lfsr,fit$result[[3]]$lfsr,fit$result[[4]]$lfsr))
+head(fit1$lfsr)
+```
+
+### Unknown $K$
+
+Then suppose we don't know $k$. Set $K = 1:6$ and apply BIC and AIC.  
+
+```{r,cache=TRUE}
+fit2 = generic.cormotif(betahat,sebetahat,K=1:5,mess=FALSE)
+```
+
+we can check the BIC and AIC values obtained by all cluster numbers:
+
+```{r}
+fit2$bic
+```
+
+The AIC values:
+
+```{r}
+fit2$aic
+```
+
+$K$ with the smallest BIC is
+
+```{r}
+fit2$bestmotif$K
+```
+
+We can see that $K=4$ doesn't give the smallest BIC or AIC. 
+
+And the "best" estimated $\pi$ is 
+
+```{r}
+fit2$bestmotif$pi
+```
+
+The estimated $w$ is 
+
+```{r}
+fit2$bestmotif$W
+```
+
+Also, we could compute the lfdr: 
+
+```{r}
+head(fit2$lfdr)
+```
+
+And lfsr:
+
+```{r}
+head(fit2$lfsr)
 ```
 
 ## Session information
