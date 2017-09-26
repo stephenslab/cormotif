@@ -12,5 +12,6 @@ output:
 
 ## Analysis
 
-1. [Simulation work based on original cormotif](Simulation.html)
+1. [Simulation for generic cormotif model](Simulation_generic_Cormotif.html)
+2. [Simulation work based on original cormotif](Simulation.html)
 
