@@ -32,7 +32,7 @@ knitr::opts_chunk$set(echo = TRUE,eval=TRUE)
 
 ## Simulation 
 
-We set unit number $n = 5000$, and study number $R = 4$. We set every observation has the same standard error, $s_{jr}=1$. That is $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 5000 units come from 4 patterns ($K=4$): 4500 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4$; 200 units have effect $\beta_{jr}\sim N(0,10^2)$ for $r =1, 2$ and $\beta_{jr}=0$ for $r =3, 4$; 200 units have effect $\beta_{jr}\sim N(0,10^2)$ for $r =2, 3$ and $\beta_{jr}=0$ for $r =1, 4$; 100 unitss have effect $\beta_{jr}\sim N(0,10^2)$ for $r =1, 2,3,4$. 
+We set unit number $n = 5000$, and study number $R = 4$. We set every observation has the same standard error, $s_{jr}=1$. That is $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 5000 units come from 4 patterns ($K=4$): 4000 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4$; 400 units have effect $\beta_{jr}\sim N(0,10^2)$ for $r =1, 2$ and $\beta_{jr}=0$ for $r =3, 4$; 400 units have effect $\beta_{jr}\sim N(0,10^2)$ for $r =2, 3$ and $\beta_{jr}=0$ for $r =1, 4$; 200 unitss have effect $\beta_{jr}\sim N(0,10^2)$ for $r =1, 2,3,4$. 
 
 ### Known $K$
 
@@ -44,7 +44,7 @@ K = 4
 D = 4
 G = 5000
 sigma2 = c(100,100,100,100)
-pi0 = c(0.02,0.04,0.04,0.9)
+pi0 = c(0.04,0.08,0.08,0.8)
 q0 = matrix(0,nrow=K,ncol=D)
 q0[1,] = c(1,1,1,1)
 q0[2,] = c(1,1,0,0)
@@ -65,9 +65,7 @@ for(g in 1:G){
 }
 betahat=X
 sebetahat=matrix(1,nrow=G,ncol=D)
-```
-
-```{r,cache=TRUE}
+# fit the model
 fit1 = generic.cormotif(betahat,sebetahat,K=4,mess=FALSE)
 ```
 
@@ -128,7 +126,7 @@ head(fit1$lfsr)
 Then suppose we don't know $k$. Set $K = 1:6$ and apply BIC and AIC.  
 
 ```{r,cache=TRUE}
-fit2 = generic.cormotif(betahat,sebetahat,K=1:5,mess=FALSE)
+fit2 = generic.cormotif(betahat,sebetahat,K=1:6,mess=FALSE)
 ```
 
 we can check the BIC and AIC values obtained by all cluster numbers:
