@@ -175,6 +175,10 @@ And lfsr:
 head(fit2$lfsr)
 ```
 
+## Discussion
+
+Our approach can conduct accurate estimation with known $K$, but without any information about $K$, neither AIC and BIC could give accurate estimation of $K$. 
+
 ## Session information
 
 <!-- Insert the session information into the document -->
