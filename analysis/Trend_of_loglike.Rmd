@@ -1,0 +1,180 @@
+---
+title: "Trend of Loglike"
+author: "Zhiwei Ma"
+date: "9/24/2017"
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval=TRUE)
+```
+
+## Simulation 1
+
+We set unit number $n = 5000$, and study number $R = 4$. We set every observation has the same standard error, $s_{jr}=1$. That is $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 5000 units come from 4 patterns ($K=4$): 2500 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4$; 1000 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1, 2$ and $\beta_{jr}=0$ for $r =3, 4$; 1000 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =2, 3$ and $\beta_{jr}=0$ for $r =1, 4$; 500 unitss have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1, 2,3,4$. 
+
+To fit the model, set $K = 1:10$.
+
+```{r,cache=TRUE}
+source('../code/function.R')
+# Simulate data
+K = 4
+D = 4
+G = 5000
+sigma2 = c(16,16,16,16)
+pi0 = c(0.1,0.2,0.2,0.5)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,1,1,0)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(111)
+for(g in 1:G){
+  for(d in 1:D){
+    if(A[g,d]==1){
+      X[g,d] = rnorm(1,0,sqrt(1+sigma2[d]))
+    } else{
+      X[g,d] = rnorm(1,0,1)
+    }
+  }
+}
+betahat=X
+sebetahat=matrix(1,nrow=G,ncol=D)
+```
+
+```{r,cache=TRUE}
+#fit the model
+fit1 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)
+```
+
+The estimated $\pi$ for $K=4$
+
+```{r}
+fit1$allmotif[[4]]$pi
+```
+
+we can check the BIC and AIC values obtained by all cluster numbers:
+
+```{r}
+fit1$bic
+```
+
+The AIC values:
+
+```{r}
+fit1$aic
+```
+
+The loglikelihood values:
+
+```{r}
+fit1$loglike
+```
+
+And plot
+
+```{r}
+plot(fit1$loglike[,2],type = "l",xlab = "K",ylab = "loglike")
+```
+
+## Simulation 2
+
+We set unit number $n = 5000$, and study number $R = 4$. We set every observation has the same standard error, $s_{jr}=1$. That is $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 5000 units come from 4 patterns ($K=4$): 2500 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4$; 1000 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1, 2$ and $\beta_{jr}=0$ for $r =3, 4$; 1000 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =3, 4$ and $\beta_{jr}=0$ for $r = 1, 2$; 500 unitss have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1, 2,3,4$. 
+
+To fit the model, set $K = 1:10$.
+
+```{r,cache=TRUE}
+#source('../code/function.R')
+# Simulate data
+K = 4
+D = 4
+G = 5000
+sigma2 = c(16,16,16,16)
+pi0 = c(0.1,0.2,0.2,0.5)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,0,1,1)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(222)
+for(g in 1:G){
+  for(d in 1:D){
+    if(A[g,d]==1){
+      X[g,d] = rnorm(1,0,sqrt(1+sigma2[d]))
+    } else{
+      X[g,d] = rnorm(1,0,1)
+    }
+  }
+}
+betahat=X
+sebetahat=matrix(1,nrow=G,ncol=D)
+```
+
+```{r,cache=TRUE}
+#fit the model
+fit2 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)
+```
+
+The estimated $\pi$ for $K=4$
+
+```{r}
+fit2$allmotif[[4]]$pi
+```
+
+we can check the BIC and AIC values obtained by all cluster numbers:
+
+```{r}
+fit2$bic
+```
+
+The AIC values:
+
+```{r}
+fit2$aic
+```
+
+The loglikelihood values:
+
+```{r}
+fit2$loglike
+```
+
+And plot
+
+```{r}
+plot(fit2$loglike[,2],type = "l",xlab = "K",ylab = "loglike")
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
