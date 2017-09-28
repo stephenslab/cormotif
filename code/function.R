@@ -1,13 +1,13 @@
 library("SQUAREM")
 
-source('~/Git/ashr/R/lik.R')
-source('~/Git/ashr/R/set_data.R')
-source('~/Git/ashr/R/ash.R')
-source('~/Git/ashr/R/mix.R')
-source('~/Git/ashr/R/normalmix.R')
-source('~/Git/ashr/R/mix_opt.R')
-source('~/Git/ashr/R/output.R')
-source('~/Git/ashr/R/ashutility.R')
+source('../code/lik.R')
+source('../code/set_data.R')
+source('../code/ash.R')
+source('../code/mix.R')
+source('../code/normalmix.R')
+source('../code/mix_opt.R')
+source('../code/output.R')
+source('../code/ashutility.R')
 
 generic.cormotif=function(betahat,sebetahat,mixcompdist = "normal",optmethod = "w_mixEM",df = NULL
        ,nullweight = 10,pointmass = TRUE,mixsd = NULL,gridmult = sqrt(2),outputlevel = 2,g = NULL
