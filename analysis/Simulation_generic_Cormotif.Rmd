@@ -1,6 +1,6 @@
 ---
 title: "Simulation for generic Cormotif model"
-author: "First Last"
+author: "Zhiwei Ma"
 date: "9/24/2017"
 output: html_document
 ---
@@ -123,10 +123,10 @@ head(fit1$lfsr)
 
 ### Unknown K
 
-Then suppose we don't know $k$. Set $K = 1:6$ and apply BIC and AIC.  
+Then suppose we don't know $k$. Set $K = 1:10$ and apply BIC and AIC.  
 
 ```{r,cache=TRUE}
-fit2 = generic.cormotif(betahat,sebetahat,K=1:6,mess=FALSE)
+fit2 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)
 ```
 
 we can check the BIC and AIC values obtained by all cluster numbers:
@@ -153,6 +153,12 @@ And the "best" estimated $\pi$ is
 
 ```{r}
 fit2$bestmotif$pi
+```
+
+The loglikelihood values:
+
+```{r}
+fit2$loglike
 ```
 
 The estimated $w$ is 
