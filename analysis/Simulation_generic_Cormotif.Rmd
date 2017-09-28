@@ -39,7 +39,7 @@ We set unit number $n = 5000$, and study number $R = 4$. We set every observatio
 First assume we know $K=4$ and fit the model. 
 
 ```{r,cache=TRUE}
-source('~/Git/cormotif/code/function.R')
+source('../code/function.R')
 K = 4
 D = 4
 G = 5000
