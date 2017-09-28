@@ -5,13 +5,9 @@ output:
     toc: false
 ---
 
-**Last updated:** `r Sys.Date()`
-
-**Code version:** `r system("git log -1 --format='%H'", intern = TRUE)`
-
-
 ## Analysis
 
 1. [Simulation for generic cormotif model](Simulation_generic_Cormotif.html)
-2. [Simulation work based on original cormotif](Simulation.html)
+2. [Analysis for the trend of loglike](Trend_of_loglike.html)
+3. [Simulation work based on original cormotif](Simulation.html)
 
