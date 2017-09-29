@@ -124,7 +124,7 @@ gcmfit = function(matrix_llik,K=1,max.iter=300,tol = 1e-4,w_init,pi_thresh,mess=
     tempmax = apply(matrix_llik2,1,max)
     matrix_lik2 = exp(matrix_llik2-tempmax)
     fit.p=mixEM(matrix_lik=matrix_lik2, prior=1,pi_init = p)
-    p.new = fit.p$pihat
+    p.new = normalize(fit.p$pihat + 1e-8)
     #print(p.new)
     
     ## update W
