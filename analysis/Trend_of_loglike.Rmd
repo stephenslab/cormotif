@@ -38,6 +38,14 @@ To fit the model, set $K = 1:10$.
 
 ```{r,cache=TRUE}
 source('../code/function.R')
+source('../code/lik.R')
+source('../code/set_data.R')
+source('../code/ash.R')
+source('../code/mix.R')
+source('../code/normalmix.R')
+source('../code/mix_opt.R')
+source('../code/output.R')
+source('../code/ashutility.R')
 # Simulate data
 K = 4
 D = 4
