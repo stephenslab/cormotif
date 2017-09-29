@@ -310,33 +310,18 @@ div.tocify {
 
 <!-- The file analysis/chunks.R contains chunks that define default settings
 shared across the workflowr files. -->
-
-
 <!-- Update knitr chunk options -->
-
-
 <!-- Insert the date the file was last updated -->
 <p><strong>Last updated:</strong> 2017-09-28</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> cdd4dd2</p>
+<p><strong>Code version:</strong> 6ab8574</p>
 <!-- Add your analysis here -->
-
-
-
 <div id="simulation-1" class="section level2">
 <h2>Simulation 1</h2>
-<p>We set unit number <span class="math">\(n = 5000\)</span>, and study number <span class="math">\(R = 4\)</span>. We set every observation has the same standard error, <span class="math">\(s_{jr}=1\)</span>. That is <span class="math">\(\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)\)</span>. The 5000 units come from 4 patterns (<span class="math">\(K=4\)</span>): 2500 units have zero effects in all four studies, that is <span class="math">\(\beta_{jr}=0\)</span>, for <span class="math">\(r = 1,2,3,4\)</span>; 1000 units have effect <span class="math">\(\beta_{jr}\sim N(0,4^2)\)</span> for <span class="math">\(r =1, 2\)</span> and <span class="math">\(\beta_{jr}=0\)</span> for <span class="math">\(r =3, 4\)</span>; 1000 units have effect <span class="math">\(\beta_{jr}\sim N(0,4^2)\)</span> for <span class="math">\(r =3, 4\)</span> and <span class="math">\(\beta_{jr}=0\)</span> for <span class="math">\(r = 1, 2\)</span>; 500 unitss have effect <span class="math">\(\beta_{jr}\sim N(0,4^2)\)</span> for <span class="math">\(r =1, 2,3,4\)</span>.</p>
-<p>To fit the model, set <span class="math">\(K = 1:10\)</span>.</p>
+<p>We set unit number <span class="math inline">\(n = 5000\)</span>, and study number <span class="math inline">\(R = 4\)</span>. We set every observation has the same standard error, <span class="math inline">\(s_{jr}=1\)</span>. That is <span class="math inline">\(\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)\)</span>. The 5000 units come from 4 patterns (<span class="math inline">\(K=4\)</span>): 2500 units have zero effects in all four studies, that is <span class="math inline">\(\beta_{jr}=0\)</span>, for <span class="math inline">\(r = 1,2,3,4\)</span>; 1000 units have effect <span class="math inline">\(\beta_{jr}\sim N(0,4^2)\)</span> for <span class="math inline">\(r =1, 2\)</span> and <span class="math inline">\(\beta_{jr}=0\)</span> for <span class="math inline">\(r =3, 4\)</span>; 1000 units have effect <span class="math inline">\(\beta_{jr}\sim N(0,4^2)\)</span> for <span class="math inline">\(r =3, 4\)</span> and <span class="math inline">\(\beta_{jr}=0\)</span> for <span class="math inline">\(r = 1, 2\)</span>; 500 unitss have effect <span class="math inline">\(\beta_{jr}\sim N(0,4^2)\)</span> for <span class="math inline">\(r =1, 2,3,4\)</span>.</p>
+<p>To fit the model, set <span class="math inline">\(K = 1:10\)</span>.</p>
 <pre class="r"><code>source(&#39;../code/function.R&#39;)
-source(&#39;../code/lik.R&#39;)
-source(&#39;../code/set_data.R&#39;)
-source(&#39;../code/ash.R&#39;)
-source(&#39;../code/mix.R&#39;)
-source(&#39;../code/normalmix.R&#39;)
-source(&#39;../code/mix_opt.R&#39;)
-source(&#39;../code/output.R&#39;)
-source(&#39;../code/ashutility.R&#39;)
 # Simulate data
 K = 4
 D = 4
@@ -365,7 +350,7 @@ betahat=X
 sebetahat=matrix(1,nrow=G,ncol=D)</code></pre>
 <pre class="r"><code>#fit the model
 fit1 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)</code></pre>
-<p>The estimated <span class="math">\(\pi\)</span> for <span class="math">\(K=4\)</span></p>
+<p>The estimated <span class="math inline">\(\pi\)</span> for <span class="math inline">\(K=4\)</span></p>
 <pre class="r"><code>fit1$allmotif[[4]]$pi</code></pre>
 <pre><code>[1] 0.50785927 0.20122922 0.09972158 0.19118993</code></pre>
 <p>we can check the BIC and AIC values obtained by all cluster numbers:</p>
@@ -413,8 +398,8 @@ fit1 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)</code></pre>
 </div>
 <div id="simulation-2" class="section level2">
 <h2>Simulation 2</h2>
-<p>With the same setting as simulation 1, just change <span class="math">\(\beta_{jr}\sim N(0,10^2)\)</span>, we check the same process.</p>
-<p>To fit the model, set <span class="math">\(K = 1:10\)</span>.</p>
+<p>With the same setting as simulation 1, just change <span class="math inline">\(\beta_{jr}\sim N(0,10^2)\)</span>, we check the same process.</p>
+<p>To fit the model, set <span class="math inline">\(K = 1:10\)</span>.</p>
 <pre class="r"><code>#source(&#39;../code/function.R&#39;)
 # Simulate data
 K = 4
@@ -444,7 +429,7 @@ betahat=X
 sebetahat=matrix(1,nrow=G,ncol=D)</code></pre>
 <pre class="r"><code>#fit the model
 fit2 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)</code></pre>
-<p>The estimated <span class="math">\(\pi\)</span> for <span class="math">\(K=4\)</span></p>
+<p>The estimated <span class="math inline">\(\pi\)</span> for <span class="math inline">\(K=4\)</span></p>
 <pre class="r"><code>fit2$allmotif[[4]]$pi</code></pre>
 <pre><code>[1] 0.5076009 0.2117091 0.0000000 0.2806900</code></pre>
 <p>we can check the BIC and AIC values obtained by all cluster numbers:</p>
@@ -493,7 +478,7 @@ fit2 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)</code></pre>
 <div id="simulation-3" class="section level2">
 <h2>Simulation 3</h2>
 <p>With the same setting as simulation 1, just change the proportion of 4 patterns to 1250:1250:1250:1250, we check the same process.</p>
-<p>To fit the model, set <span class="math">\(K = 1:10\)</span>.</p>
+<p>To fit the model, set <span class="math inline">\(K = 1:10\)</span>.</p>
 <pre class="r"><code>#source(&#39;../code/function.R&#39;)
 # Simulate data
 K = 4
@@ -523,7 +508,7 @@ betahat=X
 sebetahat=matrix(1,nrow=G,ncol=D)</code></pre>
 <pre class="r"><code>#fit the model
 fit3 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)</code></pre>
-<p>The estimated <span class="math">\(\pi\)</span> for <span class="math">\(K=4\)</span></p>
+<p>The estimated <span class="math inline">\(\pi\)</span> for <span class="math inline">\(K=4\)</span></p>
 <pre class="r"><code>fit3$allmotif[[4]]$pi</code></pre>
 <pre><code>[1] 0.2606255 0.2594550 0.2651993 0.2147203</code></pre>
 <p>we can check the BIC and AIC values obtained by all cluster numbers:</p>
@@ -572,7 +557,6 @@ fit3 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)</code></pre>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
-
 <pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>R version 3.3.3 (2017-03-06)
 Platform: x86_64-redhat-linux-gnu (64-bit)
@@ -587,7 +571,7 @@ locale:
 [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 
 attached base packages:
-[1] stats     graphics  grDevices utils     datasets  base     
+[1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
 [1] SQUAREM_2016.8-2
@@ -601,7 +585,7 @@ loaded via a namespace (and not attached):
 [16] Matrix_1.2-8       rmarkdown_1.6      tools_3.3.3       
 [19] stringr_1.2.0      compiler_3.3.3     yaml_2.1.14       
 [22] mcmc_0.9-5         htmltools_0.3.6    knitr_1.17        
-[25] quantreg_5.33      MCMCpack_1.4-0     methods_3.3.3     </code></pre>
+[25] quantreg_5.33      MCMCpack_1.4-0    </code></pre>
 </div>
 
 <hr>
