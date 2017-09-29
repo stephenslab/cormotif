@@ -37,6 +37,7 @@ We set unit number $n = 5000$, and study number $R = 4$. We set every observatio
 To fit the model, set $K = 1:10$.
 
 ```{r,cache=TRUE}
+
 source('../code/function.R')
 source('../code/lik.R')
 source('../code/set_data.R')
@@ -46,6 +47,7 @@ source('../code/normalmix.R')
 source('../code/mix_opt.R')
 source('../code/output.R')
 source('../code/ashutility.R')
+
 # Simulate data
 K = 4
 D = 4
@@ -88,13 +90,13 @@ fit1$allmotif[[4]]$pi
 we can check the BIC and AIC values obtained by all cluster numbers:
 
 ```{r}
-fit1$bic
+plot(fit1$bic,type = "l",xlab = "K",ylab = "BIC")
 ```
 
 The AIC values:
 
 ```{r}
-fit1$aic
+plot(fit1$aic,type = "l",xlab = "K",ylab = "AIC")
 ```
 
 The loglikelihood values:
@@ -143,9 +145,6 @@ for(g in 1:G){
 }
 betahat=X
 sebetahat=matrix(1,nrow=G,ncol=D)
-```
-
-```{r,cache=TRUE}
 #fit the model
 fit2 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)
 ```
@@ -159,13 +158,13 @@ fit2$allmotif[[4]]$pi
 we can check the BIC and AIC values obtained by all cluster numbers:
 
 ```{r}
-fit2$bic
+plot(fit2$bic,type = "l",xlab = "K",ylab = "BIC")
 ```
 
 The AIC values:
 
 ```{r}
-fit2$aic
+plot(fit2$aic,type = "l",xlab = "K",ylab = "AIC")
 ```
 
 The loglikelihood values:
@@ -230,13 +229,13 @@ fit3$allmotif[[4]]$pi
 we can check the BIC and AIC values obtained by all cluster numbers:
 
 ```{r}
-fit3$bic
+plot(fit3$bic,type = "l",xlab = "K",ylab = "BIC")
 ```
 
 The AIC values:
 
 ```{r}
-fit3$aic
+plot(fit3$aic,type = "l",xlab = "K",ylab = "AIC")
 ```
 
 The loglikelihood values:
