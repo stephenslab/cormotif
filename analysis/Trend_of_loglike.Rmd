@@ -118,7 +118,7 @@ With the same setting as simulation 1, just change $\beta_{jr}\sim N(0,10^2)$, w
 To fit the model, set $K = 1:10$.
 
 ```{r,cache=TRUE}
-#source('../code/function.R')
+source('../code/function.R')
 # Simulate data
 K = 4
 D = 4
