@@ -27,12 +27,12 @@ knitr::read_chunk("chunks.R")
 <!-- Add your analysis here -->
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,eval=TRUE)
+knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
 ```
 
 ## Simulation 1
 
-We set unit number $n = 5000$, and study number $R = 4$. We set every observation has the same standard error, $s_{jr}=1$. That is $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 5000 units come from 4 patterns ($K=4$): 2500 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4$; 1000 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1, 2$ and $\beta_{jr}=0$ for $r =3, 4$; 1000 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =2, 3$ and $\beta_{jr}=0$ for $r =1, 4$; 500 unitss have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1, 2,3,4$. 
+We set unit number $n = 5000$, and study number $R = 4$. We set every observation has the same standard error, $s_{jr}=1$. That is $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 5000 units come from 4 patterns ($K=4$): 2500 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4$; 1000 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1, 2$ and $\beta_{jr}=0$ for $r =3, 4$; 1000 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =3, 4$ and $\beta_{jr}=0$ for $r = 1, 2$; 500 unitss have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1, 2,3,4$. 
 
 To fit the model, set $K = 1:10$.
 
@@ -47,12 +47,12 @@ pi0 = c(0.1,0.2,0.2,0.5)
 q0 = matrix(0,nrow=K,ncol=D)
 q0[1,] = c(1,1,1,1)
 q0[2,] = c(1,1,0,0)
-q0[3,] = c(0,1,1,0)
+q0[3,] = c(0,0,1,1)
 q0[4,] = c(0,0,0,0)
 X = matrix(0,nrow=G,ncol=D)
 rows = rep(1:K,times=pi0*G)
 A = q0[rows,]
-set.seed(111)
+set.seed(222)
 for(g in 1:G){
   for(d in 1:D){
     if(A[g,d]==1){
@@ -103,7 +103,7 @@ plot(fit1$loglike[,2],type = "l",xlab = "K",ylab = "loglike")
 
 ## Simulation 2
 
-We set unit number $n = 5000$, and study number $R = 4$. We set every observation has the same standard error, $s_{jr}=1$. That is $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 5000 units come from 4 patterns ($K=4$): 2500 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4$; 1000 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1, 2$ and $\beta_{jr}=0$ for $r =3, 4$; 1000 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =3, 4$ and $\beta_{jr}=0$ for $r = 1, 2$; 500 unitss have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1, 2,3,4$. 
+With the same setting as simulation 1, just change $\beta_{jr}\sim N(0,10^2)$, we check the same process. 
 
 To fit the model, set $K = 1:10$.
 
@@ -113,7 +113,7 @@ To fit the model, set $K = 1:10$.
 K = 4
 D = 4
 G = 5000
-sigma2 = c(16,16,16,16)
+sigma2 = c(100,100,100,100)
 pi0 = c(0.1,0.2,0.2,0.5)
 q0 = matrix(0,nrow=K,ncol=D)
 q0[1,] = c(1,1,1,1)
@@ -123,7 +123,7 @@ q0[4,] = c(0,0,0,0)
 X = matrix(0,nrow=G,ncol=D)
 rows = rep(1:K,times=pi0*G)
 A = q0[rows,]
-set.seed(222)
+set.seed(22)
 for(g in 1:G){
   for(d in 1:D){
     if(A[g,d]==1){
@@ -170,6 +170,77 @@ And plot
 
 ```{r}
 plot(fit2$loglike[,2],type = "l",xlab = "K",ylab = "loglike")
+```
+
+## Simulation 3
+
+With the same setting as simulation 1, just change the proportion of 4 patterns to 1250:1250:1250:1250, we check the same process. 
+
+To fit the model, set $K = 1:10$.
+
+```{r,cache=TRUE}
+#source('../code/function.R')
+# Simulate data
+K = 4
+D = 4
+G = 5000
+sigma2 = c(16,16,16,16)
+pi0 = c(0.25,0.25,0.25,0.25)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,0,1,1)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(333)
+for(g in 1:G){
+  for(d in 1:D){
+    if(A[g,d]==1){
+      X[g,d] = rnorm(1,0,sqrt(1+sigma2[d]))
+    } else{
+      X[g,d] = rnorm(1,0,1)
+    }
+  }
+}
+betahat=X
+sebetahat=matrix(1,nrow=G,ncol=D)
+```
+
+```{r,cache=TRUE}
+#fit the model
+fit3 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)
+```
+
+The estimated $\pi$ for $K=4$
+
+```{r}
+fit3$allmotif[[4]]$pi
+```
+
+we can check the BIC and AIC values obtained by all cluster numbers:
+
+```{r}
+fit3$bic
+```
+
+The AIC values:
+
+```{r}
+fit3$aic
+```
+
+The loglikelihood values:
+
+```{r}
+fit3$loglike
+```
+
+And plot
+
+```{r}
+plot(fit3$loglike[,2],type = "l",xlab = "K",ylab = "loglike")
 ```
 
 
