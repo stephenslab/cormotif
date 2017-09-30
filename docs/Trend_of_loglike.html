@@ -315,7 +315,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-09-29</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 20b67f0</p>
+<p><strong>Code version:</strong> 8a1210a</p>
 <!-- Add your analysis here -->
 <div id="simulation-1" class="section level2">
 <h2>Simulation 1</h2>
@@ -389,7 +389,7 @@ fit1 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)</code></pre>
 <h2>Simulation 2</h2>
 <p>With the same setting as simulation 1, just change <span class="math inline">\(\beta_{jr}\sim N(0,10^2)\)</span>, we check the same process.</p>
 <p>To fit the model, set <span class="math inline">\(K = 1:10\)</span>.</p>
-<pre class="r"><code>source(&#39;../code/function.R&#39;)
+<pre class="r"><code>#source(&#39;../code/function.R&#39;)
 # Simulate data
 K = 4
 D = 4
@@ -526,11 +526,11 @@ other attached packages:
 [1] SQUAREM_2016.8-2
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.12       codetools_0.2-15   lattice_0.20-34   
+ [1] Rcpp_0.12.12       lattice_0.20-34    codetools_0.2-15  
  [4] digest_0.6.12      rprojroot_1.2      MASS_7.3-45       
  [7] grid_3.3.3         MatrixModels_0.4-1 backports_1.1.1   
-[10] git2r_0.19.0       magrittr_1.5       evaluate_0.10.1   
-[13] coda_0.19-1        stringi_1.1.5      SparseM_1.77      
+[10] git2r_0.19.0       magrittr_1.5       coda_0.19-1       
+[13] evaluate_0.10.1    stringi_1.1.5      SparseM_1.77      
 [16] Matrix_1.2-8       rmarkdown_1.6      tools_3.3.3       
 [19] stringr_1.2.0      compiler_3.3.3     yaml_2.1.14       
 [22] mcmc_0.9-5         htmltools_0.3.6    knitr_1.17        
