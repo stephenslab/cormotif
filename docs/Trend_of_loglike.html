@@ -312,16 +312,25 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-09-28</p>
+<p><strong>Last updated:</strong> 2017-09-29</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 6ab8574</p>
+<p><strong>Code version:</strong> 20b67f0</p>
 <!-- Add your analysis here -->
 <div id="simulation-1" class="section level2">
 <h2>Simulation 1</h2>
 <p>We set unit number <span class="math inline">\(n = 5000\)</span>, and study number <span class="math inline">\(R = 4\)</span>. We set every observation has the same standard error, <span class="math inline">\(s_{jr}=1\)</span>. That is <span class="math inline">\(\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)\)</span>. The 5000 units come from 4 patterns (<span class="math inline">\(K=4\)</span>): 2500 units have zero effects in all four studies, that is <span class="math inline">\(\beta_{jr}=0\)</span>, for <span class="math inline">\(r = 1,2,3,4\)</span>; 1000 units have effect <span class="math inline">\(\beta_{jr}\sim N(0,4^2)\)</span> for <span class="math inline">\(r =1, 2\)</span> and <span class="math inline">\(\beta_{jr}=0\)</span> for <span class="math inline">\(r =3, 4\)</span>; 1000 units have effect <span class="math inline">\(\beta_{jr}\sim N(0,4^2)\)</span> for <span class="math inline">\(r =3, 4\)</span> and <span class="math inline">\(\beta_{jr}=0\)</span> for <span class="math inline">\(r = 1, 2\)</span>; 500 unitss have effect <span class="math inline">\(\beta_{jr}\sim N(0,4^2)\)</span> for <span class="math inline">\(r =1, 2,3,4\)</span>.</p>
 <p>To fit the model, set <span class="math inline">\(K = 1:10\)</span>.</p>
 <pre class="r"><code>source(&#39;../code/function.R&#39;)
+source(&#39;../code/lik.R&#39;)
+source(&#39;../code/set_data.R&#39;)
+source(&#39;../code/ash.R&#39;)
+source(&#39;../code/mix.R&#39;)
+source(&#39;../code/normalmix.R&#39;)
+source(&#39;../code/mix_opt.R&#39;)
+source(&#39;../code/output.R&#39;)
+source(&#39;../code/ashutility.R&#39;)
+
 # Simulate data
 K = 4
 D = 4
@@ -354,31 +363,11 @@ fit1 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)</code></pre>
 <pre class="r"><code>fit1$allmotif[[4]]$pi</code></pre>
 <pre><code>[1] 0.50785927 0.20122922 0.09972158 0.19118993</code></pre>
 <p>we can check the BIC and AIC values obtained by all cluster numbers:</p>
-<pre class="r"><code>fit1$bic</code></pre>
-<pre><code>       K      bic
- [1,]  1 84260.56
- [2,]  2 84137.81
- [3,]  3 84758.56
- [4,]  4 84237.67
- [5,]  5 85061.94
- [6,]  6 85482.97
- [7,]  7 86103.20
- [8,]  8 86927.53
- [9,]  9 87349.68
-[10,] 10 87974.39</code></pre>
+<pre class="r"><code>plot(fit1$bic,type = &quot;l&quot;,xlab = &quot;K&quot;,ylab = &quot;BIC&quot;)</code></pre>
+<p><img src="figure/Trend_of_loglike.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The AIC values:</p>
-<pre class="r"><code>fit1$aic</code></pre>
-<pre><code>       K      aic
- [1,]  1 83791.32
- [2,]  2 83192.81
- [3,]  3 83337.81
- [4,]  4 82341.17
- [5,]  5 82689.68
- [6,]  6 82634.96
- [7,]  7 82779.43
- [8,]  8 83128.01
- [9,]  9 83074.40
-[10,] 10 83223.36</code></pre>
+<pre class="r"><code>plot(fit1$aic,type = &quot;l&quot;,xlab = &quot;K&quot;,ylab = &quot;AIC&quot;)</code></pre>
+<p><img src="figure/Trend_of_loglike.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The loglikelihood values:</p>
 <pre class="r"><code>fit1$loglike</code></pre>
 <pre><code>       K   loglike
@@ -400,7 +389,7 @@ fit1 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)</code></pre>
 <h2>Simulation 2</h2>
 <p>With the same setting as simulation 1, just change <span class="math inline">\(\beta_{jr}\sim N(0,10^2)\)</span>, we check the same process.</p>
 <p>To fit the model, set <span class="math inline">\(K = 1:10\)</span>.</p>
-<pre class="r"><code>#source(&#39;../code/function.R&#39;)
+<pre class="r"><code>source(&#39;../code/function.R&#39;)
 # Simulate data
 K = 4
 D = 4
@@ -426,54 +415,34 @@ for(g in 1:G){
   }
 }
 betahat=X
-sebetahat=matrix(1,nrow=G,ncol=D)</code></pre>
-<pre class="r"><code>#fit the model
+sebetahat=matrix(1,nrow=G,ncol=D)
+#fit the model
 fit2 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)</code></pre>
 <p>The estimated <span class="math inline">\(\pi\)</span> for <span class="math inline">\(K=4\)</span></p>
 <pre class="r"><code>fit2$allmotif[[4]]$pi</code></pre>
-<pre><code>[1] 0.5076009 0.2117091 0.0000000 0.2806900</code></pre>
+<pre><code>[1] 0.49808427 0.20541469 0.09356433 0.20293671</code></pre>
 <p>we can check the BIC and AIC values obtained by all cluster numbers:</p>
-<pre class="r"><code>fit2$bic</code></pre>
-<pre><code>       K       bic
- [1,]  1 101610.91
- [2,]  2 100267.18
- [3,]  3  98503.55
- [4,]  4  99147.95
- [5,]  5  99173.17
- [6,]  6  99899.04
- [7,]  7 100650.27
- [8,]  8 101397.31
- [9,]  9 102084.07
-[10,] 10 102860.92</code></pre>
+<pre class="r"><code>plot(fit2$bic,type = &quot;l&quot;,xlab = &quot;K&quot;,ylab = &quot;BIC&quot;)</code></pre>
+<p><img src="figure/Trend_of_loglike.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The AIC values:</p>
-<pre class="r"><code>fit2$aic</code></pre>
-<pre><code>       K       aic
- [1,]  1 101063.47
- [2,]  2  99165.77
- [3,]  3  96848.18
- [4,]  4  96938.62
- [5,]  5  96409.88
- [6,]  6  96581.79
- [7,]  7  96779.06
- [8,]  8  96972.14
- [9,]  9  97104.93
-[10,] 10  97327.82</code></pre>
+<pre class="r"><code>plot(fit2$aic,type = &quot;l&quot;,xlab = &quot;K&quot;,ylab = &quot;AIC&quot;)</code></pre>
+<p><img src="figure/Trend_of_loglike.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The loglikelihood values:</p>
 <pre class="r"><code>fit2$loglike</code></pre>
 <pre><code>       K   loglike
  [1,]  1 -50447.73
  [2,]  2 -49413.89
  [3,]  3 -48170.09
- [4,]  4 -48130.31
- [5,]  5 -47780.94
- [6,]  6 -47781.89
- [7,]  7 -47795.53
- [8,]  8 -47807.07
- [9,]  9 -47788.47
-[10,] 10 -47814.91</code></pre>
+ [4,]  4 -47802.94
+ [5,]  5 -47780.43
+ [6,]  6 -47781.19
+ [7,]  7 -47804.89
+ [8,]  8 -47778.40
+ [9,]  9 -47785.58
+[10,] 10 -47780.08</code></pre>
 <p>And plot</p>
 <pre class="r"><code>plot(fit2$loglike[,2],type = &quot;l&quot;,xlab = &quot;K&quot;,ylab = &quot;loglike&quot;)</code></pre>
-<p><img src="figure/Trend_of_loglike.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Trend_of_loglike.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="simulation-3" class="section level2">
 <h2>Simulation 3</h2>
@@ -510,49 +479,29 @@ sebetahat=matrix(1,nrow=G,ncol=D)</code></pre>
 fit3 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)</code></pre>
 <p>The estimated <span class="math inline">\(\pi\)</span> for <span class="math inline">\(K=4\)</span></p>
 <pre class="r"><code>fit3$allmotif[[4]]$pi</code></pre>
-<pre><code>[1] 0.2606255 0.2594550 0.2651993 0.2147203</code></pre>
+<pre><code>[1] 0.2608151 0.2594400 0.2648796 0.2148653</code></pre>
 <p>we can check the BIC and AIC values obtained by all cluster numbers:</p>
-<pre class="r"><code>fit3$bic</code></pre>
-<pre><code>       K      bic
- [1,]  1 96195.42
- [2,]  2 96275.35
- [3,]  3 95817.90
- [4,]  4 96144.90
- [5,]  5 96769.62
- [6,]  6 97387.08
- [7,]  7 98307.05
- [8,]  8 98633.63
- [9,]  9 99258.91
-[10,] 10 99886.75</code></pre>
+<pre class="r"><code>plot(fit3$bic,type = &quot;l&quot;,xlab = &quot;K&quot;,ylab = &quot;BIC&quot;)</code></pre>
+<p><img src="figure/Trend_of_loglike.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The AIC values:</p>
-<pre class="r"><code>fit3$aic</code></pre>
-<pre><code>       K      aic
- [1,]  1 95726.19
- [2,]  2 95330.36
- [3,]  3 94397.15
- [4,]  4 94248.40
- [5,]  5 94397.36
- [6,]  6 94539.07
- [7,]  7 94983.28
- [8,]  8 94834.11
- [9,]  9 94983.63
-[10,] 10 95135.71</code></pre>
+<pre class="r"><code>plot(fit3$aic,type = &quot;l&quot;,xlab = &quot;K&quot;,ylab = &quot;AIC&quot;)</code></pre>
+<p><img src="figure/Trend_of_loglike.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The loglikelihood values:</p>
 <pre class="r"><code>fit3$loglike</code></pre>
 <pre><code>       K   loglike
  [1,]  1 -47791.09
- [2,]  2 -47520.18
+ [2,]  2 -47520.42
  [3,]  3 -46980.58
  [4,]  4 -46833.20
- [5,]  5 -46834.68
- [6,]  6 -46832.53
- [7,]  7 -46981.64
- [8,]  8 -46834.05
- [9,]  9 -46835.81
-[10,] 10 -46838.86</code></pre>
+ [5,]  5 -46831.61
+ [6,]  6 -46832.02
+ [7,]  7 -46836.93
+ [8,]  8 -46833.53
+ [9,]  9 -46828.33
+[10,] 10 -46830.18</code></pre>
 <p>And plot</p>
 <pre class="r"><code>plot(fit3$loglike[,2],type = &quot;l&quot;,xlab = &quot;K&quot;,ylab = &quot;loglike&quot;)</code></pre>
-<p><img src="figure/Trend_of_loglike.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Trend_of_loglike.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
@@ -577,11 +526,11 @@ other attached packages:
 [1] SQUAREM_2016.8-2
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.12       lattice_0.20-34    codetools_0.2-15  
+ [1] Rcpp_0.12.12       codetools_0.2-15   lattice_0.20-34   
  [4] digest_0.6.12      rprojroot_1.2      MASS_7.3-45       
  [7] grid_3.3.3         MatrixModels_0.4-1 backports_1.1.1   
-[10] git2r_0.19.0       magrittr_1.5       coda_0.19-1       
-[13] evaluate_0.10.1    stringi_1.1.5      SparseM_1.77      
+[10] git2r_0.19.0       magrittr_1.5       evaluate_0.10.1   
+[13] coda_0.19-1        stringi_1.1.5      SparseM_1.77      
 [16] Matrix_1.2-8       rmarkdown_1.6      tools_3.3.3       
 [19] stringr_1.2.0      compiler_3.3.3     yaml_2.1.14       
 [22] mcmc_0.9-5         htmltools_0.3.6    knitr_1.17        
