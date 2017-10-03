@@ -36,6 +36,17 @@ We set unit number $n = 5000$, and study number $R = 4$. We set every observatio
 
 To fit the model, set $K = 1:10$.
 
+```{r}
+source('../code/lik.R')
+source('../code/set_data.R')
+source('../code/ash.R')
+source('../code/mix.R')
+source('../code/normalmix.R')
+source('../code/mix_opt.R')
+source('../code/output.R')
+source('../code/ashutility.R')
+```
+
 ```{r,cache=TRUE}
 source('../code/function.R')
 
@@ -74,6 +85,21 @@ The estimated $\pi$ for $K=4$
 
 ```{r}
 fit1$allmotif[[4]]$pi
+```
+
+The estimated $\pi$ for $K=1：10$ 
+
+```{r}
+fit1$allmotif[[1]]$pi
+fit1$allmotif[[2]]$pi
+fit1$allmotif[[3]]$pi
+fit1$allmotif[[4]]$pi
+fit1$allmotif[[5]]$pi
+fit1$allmotif[[6]]$pi
+fit1$allmotif[[7]]$pi
+fit1$allmotif[[8]]$pi
+fit1$allmotif[[9]]$pi
+fit1$allmotif[[10]]$pi
 ```
 
 we can check the BIC and AIC values obtained by all cluster numbers:
@@ -144,6 +170,21 @@ The estimated $\pi$ for $K=4$
 fit2$allmotif[[4]]$pi
 ```
 
+The estimated $\pi$ for $K=1：10$ 
+
+```{r}
+fit2$allmotif[[1]]$pi
+fit2$allmotif[[2]]$pi
+fit2$allmotif[[3]]$pi
+fit2$allmotif[[4]]$pi
+fit2$allmotif[[5]]$pi
+fit2$allmotif[[6]]$pi
+fit2$allmotif[[7]]$pi
+fit2$allmotif[[8]]$pi
+fit2$allmotif[[9]]$pi
+fit2$allmotif[[10]]$pi
+```
+
 we can check the BIC and AIC values obtained by all cluster numbers:
 
 ```{r}
@@ -211,6 +252,21 @@ The estimated $\pi$ for $K=4$
 
 ```{r}
 fit3$allmotif[[4]]$pi
+```
+
+The estimated $\pi$ for $K=1：10$ 
+
+```{r}
+fit3$allmotif[[1]]$pi
+fit3$allmotif[[2]]$pi
+fit3$allmotif[[3]]$pi
+fit3$allmotif[[4]]$pi
+fit3$allmotif[[5]]$pi
+fit3$allmotif[[6]]$pi
+fit3$allmotif[[7]]$pi
+fit3$allmotif[[8]]$pi
+fit3$allmotif[[9]]$pi
+fit3$allmotif[[10]]$pi
 ```
 
 we can check the BIC and AIC values obtained by all cluster numbers:
