@@ -37,16 +37,7 @@ We set unit number $n = 5000$, and study number $R = 4$. We set every observatio
 To fit the model, set $K = 1:10$.
 
 ```{r,cache=TRUE}
-
 source('../code/function.R')
-source('../code/lik.R')
-source('../code/set_data.R')
-source('../code/ash.R')
-source('../code/mix.R')
-source('../code/normalmix.R')
-source('../code/mix_opt.R')
-source('../code/output.R')
-source('../code/ashutility.R')
 
 # Simulate data
 K = 4
@@ -74,14 +65,12 @@ for(g in 1:G){
 }
 betahat=X
 sebetahat=matrix(1,nrow=G,ncol=D)
-```
 
-```{r,cache=TRUE}
 #fit the model
 fit1 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)
 ```
 
-The estimated $\pi$ for $K=4$
+The estimated $\pi$ for $K=4$ 
 
 ```{r}
 fit1$allmotif[[4]]$pi
@@ -213,9 +202,7 @@ for(g in 1:G){
 }
 betahat=X
 sebetahat=matrix(1,nrow=G,ncol=D)
-```
 
-```{r,cache=TRUE}
 #fit the model
 fit3 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)
 ```
