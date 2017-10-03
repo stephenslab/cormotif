@@ -36,17 +36,6 @@ We set unit number $n = 5000$, and study number $R = 4$. We set every observatio
 
 To fit the model, set $K = 1:10$.
 
-```{r}
-source('../code/lik.R')
-source('../code/set_data.R')
-source('../code/ash.R')
-source('../code/mix.R')
-source('../code/normalmix.R')
-source('../code/mix_opt.R')
-source('../code/output.R')
-source('../code/ashutility.R')
-```
-
 ```{r,cache=TRUE}
 source('../code/function.R')
 
@@ -216,7 +205,7 @@ With the same setting as simulation 1, just change the proportion of 4 patterns 
 To fit the model, set $K = 1:10$.
 
 ```{r,cache=TRUE}
-#source('../code/function.R')
+source('../code/function.R')
 # Simulate data
 K = 4
 D = 4
