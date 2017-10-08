@@ -68,7 +68,16 @@ generic.cormotif=function(betahat,sebetahat,mixcompdist = "normal",optmethod = "
   }
   bestmotif=fitresult[[bestflag]]
   ## lfdr and lsdr
-  ds = comp_lfdsr(bestmotif, g, data)
+  lfdr = list()
+  lfsr = list()
+  post_mean = list()
+  for(i in 1:length(K)){
+    ds = comp_lfdsr(fitresult[[i]], g, data)
+    lfdr[[i]] = ds$lfdr
+    lfsr[[i]] = ds$lfsr
+    post_mean[[i]] = ds$post_mean
+  }
+  #ds = comp_lfdsr(bestmotif, g, data)
   # output = set_output(outputlevel) #sets up flags for what to output
   # resfns = set_resfns(output)
   # result = list()
@@ -82,7 +91,7 @@ generic.cormotif=function(betahat,sebetahat,mixcompdist = "normal",optmethod = "
   #  
   # }
   return(list(bestmotif=fitresult[[bestflag]],bic=cbind(K,bic),
-                aic=cbind(K,aic),loglike=cbind(K,loglike),mixsd=mixsd,allmotif=fitresult,lfdr=ds$lfdr,lfsr=ds$lfsr))
+                aic=cbind(K,aic),loglike=cbind(K,loglike),mixsd=mixsd,allmotif=fitresult,lfdr=lfdr,lfsr=lfsr,post_mean=post_mean))
 }
 
 gcmfit = function(matrix_llik,K=1,max.iter=300,tol = 1e-4,w_init,pi_thresh,mess=TRUE){
@@ -188,6 +197,7 @@ comp_lfdsr= function(bestmotif, g, data){
   clustlike0 = bestmotif$clustlike
   lfdr = matrix(0,n,R)
   lfsr = matrix(0,n,R)
+  post_mean = matrix(0,n,R)
   Theta = array(0,dim=c(R,n,L))
   for(r in 1:R){
     we = array(0,dim=c(K0,n,L))
@@ -202,11 +212,12 @@ comp_lfdsr= function(bestmotif, g, data){
     lfdr[,r] = Theta[r,,1]
     NegativeProb = rowSums(t(comp_cdf_post(g,0,data[[r]]))*Theta[r,,])-lfdr[,r]
     lfsr[,r] = compute_lfsr(NegativeProb,lfdr[,r])
+    post_mean[,r] = rowSums(t(comp_postmean(g,data[[r]]))*Theta[r,,])
   }
   
-  list(lfdr=lfdr,lfsr=lfsr,Theta=Theta)
+  list(lfdr=lfdr,lfsr=lfsr,post_mean = post_mean,Theta=Theta)
 }
 
 
-#results = generic.cormotif(betahat,sebetahat,K=4)
+#results = generic.cormotif(betahat,sebetahat,K=1:4)
 

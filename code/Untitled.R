@@ -170,20 +170,29 @@ q0[2,] = c(1,1,0,0)
 q0[3,] = c(0,1,1,0)
 q0[4,] = c(0,0,0,0)
 X = matrix(0,nrow=G,ncol=D)
+Y = matrix(0,nrow=G,ncol=D)
 rows = rep(1:K,times=pi0*G)
 A = q0[rows,]
 set.seed(4)
 for(g in 1:G){
   for(d in 1:D){
     if(A[g,d]==1){
-      X[g,d] = rnorm(1,0,sqrt(1+sigma2[d]))
+      X[g,d] = rnorm(1,0,sqrt(sigma2[d]))
     } else{
-      X[g,d] = rnorm(1,0,1)
+      X[g,d] = 0
     }
   }
 }
-betahat=X
+beta = X
 sebetahat=matrix(1,nrow=G,ncol=D)
+betahat=matrix(10,nrow=G,ncol=D)
+for(g in 1:G){
+  for(d in 1:D){
+    betahat[g,d] = rnorm(1,beta[g,d],sebetahat[g,d])
+  }
+}
+
+
 
 ## sim 2
 K = 4
@@ -215,9 +224,9 @@ sebetahat=matrix(1,nrow=G,ncol=D)
 ## sim3
 K = 5
 D = 8
-G = 10000
+G = 1000
 sigma2 = rep(16,D)
-pi0 = c(0.02,0.02,0.02,0.02,0.92)
+pi0 = c(0.05,0.05,0.05,0.05,0.8)
 q0 = matrix(0,nrow=K,ncol=D)
 q0[1,] = c(1,1,1,1,1,1,1,1)
 q0[2,] = c(1,1,1,1,0,0,0,0)
@@ -236,3 +245,32 @@ for(g in 1:G){
     }
   }
 }
+
+L = 1000
+thres = seq(0.01,1,length=L)
+fpr = rep(0,L)
+tpr = rep(0,L)
+for(i in 1:L){
+  tpr[i] = mean(results$lfsr[[1]][beta != 0]<thres[i])
+  fpr[i] = mean(results$lfsr[[1]][beta == 0]<thres[i])
+}
+plot(fpr,tpr,type="l",xlab="False Positive Rate",ylab="True Positive Rate",col=1)
+for(i in 1:L){
+  tpr[i] = mean(results$lfsr[[2]][beta != 0]<thres[i])
+  fpr[i] = mean(results$lfsr[[2]][beta == 0]<thres[i])
+}
+lines(fpr,tpr,col=2)
+for(i in 1:L){
+  tpr[i] = mean(results$lfsr[[4]][beta != 0]<thres[i])
+  fpr[i] = mean(results$lfsr[[4]][beta == 0]<thres[i])
+}
+lines(fpr,tpr,col=3)
+legend('bottomright',legend=c("K=1","K=2","K=4"),lty =1,col=1:3)
+
+
+RRMSE = rep(0,4)
+for(i in 1:4){
+  RRMSE[i] = sqrt(mean((results$post_mean[[i]]-beta)^2)/mean((betahat-beta)^2))
+}
+plot(RRMSE,type="l",xlab="K",ylab="RRMSE",main="RRMSE for Simulation 1")
+
