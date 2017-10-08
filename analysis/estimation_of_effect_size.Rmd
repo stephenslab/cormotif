@@ -1,0 +1,213 @@
+---
+title: "estimation of effect sizes and detection of significant effects"
+author: "Zhiwei Ma"
+date: YYYY-MM-DD
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
+```
+
+## Overview 
+
+In this files, we analyze the accuracy of estimaiton of effect sizes and the detection of significant effects. To measure the accuracy, we apply the relative root mean squrared error (RRMSE). An RRMSE < 1 indicates the methods produces estimates that are more accurate than the original obserbation $\hat\beta$. For detection of significant effects, we require the estimated sign of each significant effect to be correct to be considered a "true positive". 
+
+## Results
+
+### Simulation 1
+
+We set unit number $n = 5000$, and study number $R = 4$. We set every observation has the same standard error, $s_{jr}=1$. That is $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 5000 units come from 4 patterns ($K=4$): 4500 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4$; 200 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1, 2$ and $\beta_{jr}=0$ for $r =3, 4$; 200 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =3, 4$ and $\beta_{jr}=0$ for $r = 1, 2$; 100 unitss have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1, 2,3,4$. 
+
+To fit the model, set $K = 1:10$.
+
+```{r,cache=TRUE}
+source('../code/function.R')
+K = 4
+D = 4
+G = 5000
+sigma2 = c(16,16,16,16)
+pi0 = c(0.02,0.04,0.04,0.9)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1)
+q0[2,] = c(1,1,0,0)
+q0[3,] = c(0,1,1,0)
+q0[4,] = c(0,0,0,0)
+X = matrix(0,nrow=G,ncol=D)
+Y = matrix(0,nrow=G,ncol=D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(111)
+for(g in 1:G){
+  for(d in 1:D){
+    if(A[g,d]==1){
+      X[g,d] = rnorm(1,0,sqrt(sigma2[d]))
+    } else{
+      X[g,d] = 0
+    }
+  }
+}
+beta = X
+sebetahat=matrix(1,nrow=G,ncol=D)
+betahat=matrix(10,nrow=G,ncol=D)
+for(g in 1:G){
+  for(d in 1:D){
+    betahat[g,d] = rnorm(1,beta[g,d],sebetahat[g,d])
+  }
+}
+
+# fit the model
+fit1 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)
+```
+
+The RRMSE for K = 1:10 is 
+
+```{r,echo = FALSE}
+RRMSE = rep(0,10)
+for(i in 1:10){
+  RRMSE[i] = sqrt(mean((fit1$post_mean[[i]]-beta)^2)/mean((betahat-beta)^2))
+}
+plot(RRMSE,type="l",xlab="K",ylab="RRMSE",main="RRMSE for Simulation 1")
+```
+
+Changing the threshold for lfsr, we plot the ROC curve for $K=1,2,4,10$. Notice that when $K=1$, it is equvalent to apply ash to each study separately, and $K = 4$ is the true model.
+
+```{r,echo = FALSE}
+L = 10000
+thres = seq(0.01,1,length=L)
+fpr = rep(0,L)
+tpr = rep(0,L)
+for(i in 1:L){
+  tpr[i] = mean(fit1$lfsr[[1]][beta != 0]<thres[i])
+  fpr[i] = mean(fit1$lfsr[[1]][beta == 0]<thres[i])
+}
+plot(fpr,tpr,type="l",xlab="False Positive Rate",ylab="True Positive Rate",main ="ROC curve for Simulation 1",col=1)
+for(i in 1:L){
+  tpr[i] = mean(fit1$lfsr[[2]][beta != 0]<thres[i])
+  fpr[i] = mean(fit1$lfsr[[2]][beta == 0]<thres[i])
+}
+lines(fpr,tpr,col=2)
+for(i in 1:L){
+  tpr[i] = mean(fit1$lfsr[[4]][beta != 0]<thres[i])
+  fpr[i] = mean(fit1$lfsr[[4]][beta == 0]<thres[i])
+}
+lines(fpr,tpr,col=3)
+for(i in 1:L){
+  tpr[i] = mean(fit1$lfsr[[10]][beta != 0]<thres[i])
+  fpr[i] = mean(fit1$lfsr[[10]][beta == 0]<thres[i])
+}
+lines(fpr,tpr,col=4)
+legend('bottomright',legend=c("K=1","K=2","K=4","K=10"),lty =1,col=1:4)
+```
+
+### Simulation 2
+
+We set unit number $n = 5000$, and study number $R = 8$. We set every observation has the same standard error, $s_{jr}=1$. That is $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 5000 units come from 5 patterns ($K=5$): 4000 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4,5,6,7,8$; 250 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1,2,3,4$ and $\beta_{jr}=0$ for $r =5, 6,7,8$; 250 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =5, 6,7,8$ and $\beta_{jr}=0$ for $r = 1,2,3,4$; 250 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =3,4,5,6$ and $\beta_{jr}=0$ for $r = 1,2,7,8$; 250 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1,2,3,4,5,6,7,8$. 
+
+To fit the model, set $K = 1:10$.
+
+```{r,cache=TRUE}
+source('../code/function.R')
+K = 5
+D = 8
+G = 5000
+sigma2 = rep(16,D)
+pi0 = c(0.05,0.05,0.05,0.05,0.8)
+q0 = matrix(0,nrow=K,ncol=D)
+q0[1,] = c(1,1,1,1,1,1,1,1)
+q0[2,] = c(1,1,1,1,0,0,0,0)
+q0[3,] = c(0,0,0,0,1,1,1,1)
+q0[4,] = c(0,0,1,1,1,1,0,0)
+q0[5,] = c(0,0,0,0,0,0,0,0)
+X = matrix(0,nrow=G,ncol=D)
+Y = matrix(0,nrow=G,ncol=D)
+rows = rep(1:K,times=pi0*G)
+A = q0[rows,]
+set.seed(222)
+for(g in 1:G){
+  for(d in 1:D){
+    if(A[g,d]==1){
+      X[g,d] = rnorm(1,0,sqrt(sigma2[d]))
+    } else{
+      X[g,d] = 0
+    }
+  }
+}
+beta = X
+sebetahat=matrix(1,nrow=G,ncol=D)
+betahat=matrix(10,nrow=G,ncol=D)
+for(g in 1:G){
+  for(d in 1:D){
+    betahat[g,d] = rnorm(1,beta[g,d],sebetahat[g,d])
+  }
+}
+# fit the model
+fit2 = generic.cormotif(betahat,sebetahat,K=1:10,mess=FALSE)
+```
+
+The RRMSE for K = 1:10 is 
+
+```{r,echo = FALSE}
+RRMSE = rep(0,10)
+for(i in 1:10){
+  RRMSE[i] = sqrt(mean((fit2$post_mean[[i]]-beta)^2)/mean((betahat-beta)^2))
+}
+plot(RRMSE,type="l",xlab="K",ylab="RRMSE",main="RRMSE for Simulation 2")
+```
+
+We plot the ROC curve for $K=1,2,5,10$. Notice that when $K=1$, it is equvalent to apply ash to each study separately, and $K=5$ is the true model. 
+
+```{r,echo = FALSE}
+L = 10000
+thres = seq(0.01,1,length=L)
+fpr = rep(0,L)
+tpr = rep(0,L)
+for(i in 1:L){
+  tpr[i] = mean(fit2$lfsr[[1]][beta != 0]<thres[i])
+  fpr[i] = mean(fit2$lfsr[[1]][beta == 0]<thres[i])
+}
+plot(fpr,tpr,type="l",xlab="False Positive Rate",ylab="True Positive Rate",main="ROC curve for Simulation 2",col=1)
+for(i in 1:L){
+  tpr[i] = mean(fit2$lfsr[[2]][beta != 0]<thres[i])
+  fpr[i] = mean(fit2$lfsr[[2]][beta == 0]<thres[i])
+}
+lines(fpr,tpr,col=2)
+for(i in 1:L){
+  tpr[i] = mean(fit2$lfsr[[5]][beta != 0]<thres[i])
+  fpr[i] = mean(fit2$lfsr[[5]][beta == 0]<thres[i])
+}
+lines(fpr,tpr,col=3)
+for(i in 1:L){
+  tpr[i] = mean(fit2$lfsr[[10]][beta != 0]<thres[i])
+  fpr[i] = mean(fit2$lfsr[[10]][beta == 0]<thres[i])
+}
+lines(fpr,tpr,col=4)
+legend('bottomright',legend=c("K=1","K=2","K=4","K=10"),lty =1,col=1:4)
+```
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
