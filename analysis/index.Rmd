@@ -9,5 +9,6 @@ output:
 
 1. [Simulation for generic cormotif model](Simulation_generic_Cormotif.html)
 2. [Analysis for the trend of loglike](Trend_of_loglike.html)
-3. [Simulation work based on original cormotif](Simulation.html)
+3. [estimation of effect sizes and detection of significant effects](estimation_of_effect_size.html)
+4. [Simulation work based on original cormotif](Simulation.html)
 
