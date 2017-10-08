@@ -27,7 +27,7 @@ knitr::read_chunk("chunks.R")
 <!-- Add your analysis here -->
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
+knitr::opts_chunk$set(echo = TRUE,eval=TRUE)
 ```
 
 ## Overview 
@@ -91,7 +91,9 @@ for(i in 1:10){
 plot(RRMSE,type="l",xlab="K",ylab="RRMSE",main="RRMSE for Simulation 1")
 ```
 
-Changing the threshold for lfsr, we plot the ROC curve for $K=1,2,4,10$. Notice that when $K=1$, it is equvalent to applying ash to each study separately, and $K = 4$ is the true model.
+Notice that when $K=1$, it is equvalent to applying ash to each study separately, and $K = 4$ is the true model. 
+
+Changing the threshold for lfsr, we plot the ROC curve for $K=1,2,4,10$. 
 
 ```{r,echo = FALSE}
 L = 10000
@@ -176,7 +178,9 @@ for(i in 1:10){
 plot(RRMSE,type="l",xlab="K",ylab="RRMSE",main="RRMSE for Simulation 2")
 ```
 
-We plot the ROC curve for $K=1,2,5,10$. Notice that when $K=1$, it is equvalent to apply ash to each study separately, and $K=5$ is the true model. 
+Notice that when $K=1$, it is equvalent to applying ash to each study separately, and $K=5$ is the true model. 
+
+We plot the ROC curve for $K=1,2,5,10$. 
 
 ```{r,echo = FALSE}
 L = 10000
@@ -203,7 +207,7 @@ for(i in 1:L){
   fpr[i] = mean(fit2$lfsr[[10]][beta == 0]<thres[i])
 }
 lines(fpr,tpr,col=4)
-legend('bottomright',legend=c("K=1","K=2","K=4","K=10"),lty =1,col=1:4)
+legend('bottomright',legend=c("K=1","K=2","K=5","K=10"),lty =1,col=1:4)
 ```
 
 ## Session information
