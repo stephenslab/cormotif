@@ -1,7 +1,7 @@
 ---
 title: "estimation of effect sizes and detection of significant effects"
 author: "Zhiwei Ma"
-date: YYYY-MM-DD
+date: 2017-10-08
 output: html_document
 ---
 
@@ -91,7 +91,7 @@ for(i in 1:10){
 plot(RRMSE,type="l",xlab="K",ylab="RRMSE",main="RRMSE for Simulation 1")
 ```
 
-Changing the threshold for lfsr, we plot the ROC curve for $K=1,2,4,10$. Notice that when $K=1$, it is equvalent to apply ash to each study separately, and $K = 4$ is the true model.
+Changing the threshold for lfsr, we plot the ROC curve for $K=1,2,4,10$. Notice that when $K=1$, it is equvalent to applying ash to each study separately, and $K = 4$ is the true model.
 
 ```{r,echo = FALSE}
 L = 10000
