@@ -190,7 +190,7 @@ By Bayes theorem,
 \end{eqnarray}
 Here the posterior mixture component $h_l$ is the posterior on $\beta_{jr}$ that would be obtained using prior $f_l(\beta_{jr})$ and likelihood $p(\hat\beta_{jr}|\beta_{jr},\hat s_{jr})$, and the mixture weights $\theta_{ljr}$ is
 \begin{equation}
-     \theta_{ljr} = \sum_{k=1}^K\frac{w_{l}^{kr}\tilde f_{l}(\hat\beta_{jr})p_{jk}}{\sum_{l'=0}^L\eta_{l'r}\tilde f_{l'jr}(\hat\beta_{jr})}.
+     \theta_{ljr} = \sum_{k=1}^K\frac{w_{l}^{kr}\tilde f_{l}(\hat\beta_{jr})p_{jk}}{\sum_{l'=0}^L\eta_{l'r}\tilde f_{l'}(\hat\beta_{jr})}.
 \end{equation}
 
 
@@ -209,7 +209,7 @@ Here the posterior mixture component $h_l$ is the posterior on $\beta_{jr}$ that
 % \end{equation}
 % the convolution of $f_l$ and a density function. Then $\theta_{ljr}$ can be obtained from
 % \begin{equation}
-%     \theta_{ljr} = \frac{\eta_{lr}\tilde f_{ljr}(\hat\beta_{jr})}{\sum_{l'=0}^L\eta_{l'r}\tilde f_{l'jr}(\hat\beta_{jr})}.
+%     \theta_{ljr} = \frac{\eta_{lr}\tilde f_{ljr}(\hat\beta_{jr})}{\sum_{l'=0}^L\eta_{l'r}\tilde f_{l'} (\hat\beta_{jr})}.
 % \end{equation}
 
 \begin{thebibliography}{99}
