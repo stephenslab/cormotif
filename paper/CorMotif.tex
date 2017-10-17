@@ -1,0 +1,178 @@
+\documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+\usepackage{setspace}
+\doublespacing
+%\geometry{landscape}                		% Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb}
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+
+\newtheorem{assumption}{Assumption}
+
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+
+\title{Solving Correlation Motifs via EM algorithm}
+\author{Zhiwei Ma}
+						% Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+\section{Introduction}
+
+This article contains introduction about CorMotif model by $Wei$ $and$ $Li$ (2015) and detail implementation of EM algorithm in CorMotif. The original CorMotif is based on $limma$ ($Smyth$, 2004). In this article, we expand CorMotif to any distribution. For Gaussian model, we introduce the iterative formula to estimate its parameters. 
+
+\section{Correlation Motif Model}
+
+Suppose there are $n$ genes and $R$ studies for each gene. Let $x_{ir}$ denote the statistics of gene $i$ in study $r$, where $i=1,2,\ldots,n$ and $r = 1,2,\ldots,R$. The collection of all observed data is 
+$$X=\{x_{ir}| i=1,2,\ldots,n; r = 1,2,\ldots,R\}.$$
+
+For each study, the statistics $x_{ir}$ may follow two different distribution: one from the $null$ hypothesis, the other from the alternative hypothesis. Let $y_{ir}=1$ or $0$ denote whether $x_{ir}$ comes from the $alternative$ hypothesis. Given the state $y_{ir}$, assume $x_{ir}$ follows
+\begin{eqnarray}
+\label{eq:1}
+f_{r0}(x_{ir}):=f_r(x_{ir}|y_{ir}=0),    \\ 
+f_{r1}(x_{ir}):=f_r(x_{ir}|y_{ir}=1).
+\label{eq:2}
+\end{eqnarray}
+
+The states of gene $i$ can be expressed as $Y_i = (y_{i1},\ldots,y_{iR})^T$. For $R$ studies, there are totally $2^R$ possible configurations. One way to study the correlation between different studies is to find the frequencies of each configuration among $n$ genes. However, we need at least $O(2^R)$ samples to calculate each frequency, which will increase rapidly as $R$ increases. Here we introduce the Correlation Motifs.
+
+CorMotif adopts a hierarchical mixture model. It assumes that all genes fall into $K$ classes. In addtion, it assumes
+
+\begin{assumption} Each gene $i$ is assigned to a class label $z_i$, here $z_i\in \{1,2,\ldots,K\}$. The prior distribution for $z_i$ is $Pr(z_i=k)=\pi_k, k=1,2,\ldots,K $. Thus, we have $\sum_k \pi_k=1$ and denote $ \pi=(\pi_1,\ldots,\pi_K)$.
+\end{assumption}
+\begin{assumption} Given gene's class label $z_i$, gene's state $y_{ir}$ are independent, following $ Pr(y_{ir}=1|z_i =k)=q_{kr}$. For the $k^{th}$ class, denote $q_k=(q_{k1},\ldots,q_{kR})^T$. 
+\end{assumption}
+\begin{assumption}Given the gene's state $y_{ir}$, the statistic $x_{ir}$ are independently following (\ref{eq:1}) and (\ref{eq:2}).
+\end{assumption}
+
+Let $Z = (z_1,\ldots,z_n)$ denote the class membership and $ Q = (q_1,\ldots,q_K)^T$ is the $K \times R$ matrix. For gene $i$ and study $r$ we have 
+\begin{equation*}
+p(x_{ir},y_{ir}|z_i=k,\pi,Q) = [q_{kr}f_{r1}(x_{ir})]^{y_{ir}}[(1-q_{kr})f_{r0}(x_{ir})]^{1-y_{ir}}.
+\end{equation*}
+Thus,
+\begin{equation*}
+p(X_{i},Y_{i}|z_i=k,\pi,Q) = \prod_{r=1}^R [q_{kr}f_{r1}(x_{ir})]^{y_{ir}}[(1-q_{kr})f_{r0}(x_{ir})]^{1-y_{ir}},
+\end{equation*}
+here $X_{i}=(x_{i1},\ldots, x_{iR})^T$. We can get
+\begin{equation*}
+p(X_{i},Y_{i}, z_i|\pi,Q) = \prod_{k=1}^K \{\pi_k \prod_{r=1}^R [q_{kr}f_{r1}(x_{ir})]^{y_{ir}}[(1-q_{kr})f_{r0}(x_{ir})]^{1-y_{ir}}\}^{\mathbb {I}(z_i=k)},
+\end{equation*}
+where $\mathbb {I}$  is an indicator function. Therefore, based on above formulas, the joint probability distribution of $X$, $Y$ and $Z$ condtional on $\pi$ and $Q$ is
+\begin{equation}
+p(X,Y, Z|\pi,Q) =\prod_{i=1}^n \prod_{k=1}^K \{\pi_k \prod_{r=1}^R [q_{kr}f_{r1}(x_{ir})]^{y_{ir}}[(1-q_{kr})f_{r0}(x_{ir})]^{1-y_{ir}}\}^{\mathbb {I}(z_i=k)}.
+\end{equation}
+In the joint probability distribution above, only $X$ is observed, $Y$ and $Z$ are missing values or $latent$ data. $\pi$ and $Q$ are unknown parameters. The maximum likelihood estimate (MLE) of the unknown parameters is determined by the marginal likelihood of the observed data
+\begin{eqnarray}
+L(\pi,Q;X) &= &p(X|\pi,Q) = \sum_Y \sum_Z p(X,Y, Z|\pi,Q)  \nonumber \\
+&=& \prod_{i=1}^n\sum_{k=1}^K \pi_k\prod_{r=1}^R [q_{kr}f_{r1}(x_{ir})+(1-q_{kr})f_{r0}(x_{ir})].
+\end{eqnarray}
+However, it is unrealistic to obtain the optimal values for $\pi$ and $Q$ by maximizing above formula directly. Instead, we will apply the EM algorithm to handle this problem. 
+
+\section{Estimation Method}
+\subsection{Expectation-Maximization algorithm}
+
+The Expectation-Maximization (EM) algorithm seeks to find the MLE of the marginal likelihood by iteratively apply these two steps:
+\begin{itemize}
+\item \textbf{E-step:} Calculate the expected value of log-likelihood function, with respect to the conditional distribution of $Y, Z$ given $X$ under the current estimate of the parameters $(\pi^{(t)}, Q^ {(t)})$:
+\begin{equation*}
+Q(\pi,Q|\pi^{(t)}, Q^ {(t)})=E_{Y,Z|X,\pi^{(t)}, Q^ {(t)}}[\log L(\pi,Q;X,Y,Z)].
+\end{equation*}
+\item \textbf{M-step:} Find the parameter that maximizes this quantity:
+\begin{equation*}
+(\pi^{(t+1)}, Q^ {(t+1)}) =\argmax_{(\pi,Q)} Q(\pi,Q|\pi^{(t)}, Q^ {(t)}).
+\end{equation*}
+\end{itemize}
+
+In the E-step, we have
+\begin{eqnarray*}
+&&\log L(\pi,Q;X,Y,Z) = \log p(X,Y, Z|\pi,Q)  \\
+&=&  \sum_{i=1}^n \sum_{k=1}^K \mathbb {I}(z_i=k) \{ \log \pi_k + \sum_{r=1}^R y_{ir}[\log q_{kr} + \log f_{r1}(x_{ir})] \\
+& +&  \sum_{r=1}^R (1-y_{ir})[\log (1-q_{kr}) + \log f_{r0}(x_{ir})] \}  \\
+&=& \sum_{i=1}^n \sum_{k=1}^K \mathbb {I}(z_i=k) \log \pi_k +  \sum_{i=1}^n \sum_{k=1}^K \mathbb {I}(z_i=k) \{ \sum_{r=1}^R y_{ir}[\log q_{kr} + \log f_{r1}(x_{ir})] \\
+& +&  \sum_{r=1}^R (1-y_{ir})[\log (1-q_{kr}) + \log f_{r0}(x_{ir})] \}.  \\
+\end{eqnarray*}
+Therefore,
+\begin{eqnarray}
+&& Q(\pi,Q|\pi^{(t)}, Q^ {(t)})=E_{Y,Z|X,\pi^{(t)}, Q^ {(t)}}[\log L(\pi,Q;X,Y,Z)] \nonumber \\
+&=& \sum_{i=1}^n \sum_{k=1}^K p_{ik} \log \pi_k +\sum_{i=1}^n \sum_{k=1}^K \sum_{r=1}^R p_{ikr1}[\log q_{kr} + \log f_{r1}(x_{ir})] \nonumber \\
+&+& \sum_{i=1}^n \sum_{k=1}^K \sum_{r=1}^R p_{ikr0}[\log (1-q_{kr}) + \log f_{r0}(x_{ir})],
+\label{eq:Q}
+\end{eqnarray}
+where we denote 
+\begin{eqnarray*}
+ p_{ik} &=& E_{Y,Z|X,\pi^{(t)}, Q^ {(t)}}[\mathbb {I}(z_i=k)], \\
+ p_{ikr1} &=&E_{Y,Z|X,\pi^{(t)}, Q^ {(t)}}[ \mathbb {I}(z_i=k) y_{ir}], \\
+  p_{ikr0} &=&E_{Y,Z|X,\pi^{(t)}, Q^ {(t)}}[ \mathbb {I}(z_i=k)(1-y_{ir})].
+ \end{eqnarray*}
+It is easy to see that $ p_{ik} = p_{ikr1}+p_{ikr1}$. We can compute $p_{ik}$ and $p_{ikr1}$ by
+\begin{eqnarray}
+p_{ik} &=& E_{Y,Z|X,\pi^{(t)}, Q^ {(t)}}[\mathbb {I}(z_i=k)]  = Pr(z_i=k|X_i,\pi^{(t)}, Q^ {(t)}) \nonumber\\
+&=& \frac{p(z_i=k,X_i|\pi^{(t)}, Q^ {(t)})} {p(X_i|\pi^{(t)}, Q^ {(t)})} \nonumber\\
+&=& \frac{ \pi_k^{(t)}\prod_{r=1}^R [q_{kr}^{(t)}f_{r1}(x_{ir})+(1-q_{kr}^{(t)})f_{r0}(x_{ir})] }{\sum_{l=1}^K \pi_l^{(t)}\prod_{r=1}^R [q_{lr}^{(t)}f_{r1}(x_{ir})+(1-q_{lr}^{(t)})f_{r0}(x_{ir})] },
+\label{eq:ik}
+\end{eqnarray}
+\begin{eqnarray}
+p_{ikr1} &=& E_{Y,Z|X,\pi^{(t)}, Q^ {(t)}}[ \mathbb {I}(z_i=k) y_{ir}]=Pr(z_i=k, y_{ir}=1|X_i,\pi^{(t)}, Q^ {(t)}) \nonumber\\
+&=& Pr(y_{ir}=1|z_i=k, X_i,\pi^{(t)}, Q^ {(t)}) \times Pr(z_i=k|X_i,\pi^{(t)}, Q^ {(t)}) \nonumber\\
+&=& \frac{p(y_{ir}=1,x_{ir}|z_i=k,\pi^{(t)}, Q^ {(t)})} {p(x_{ir}|z_i=k, \pi^{(t)}, Q^ {(t)})}\times p_{ik} \nonumber \\
+&=& \frac{q_{kr}^{(t)}f_{r1}(x_{ir})}{q_{kr}^{(t)}f_{r1}(x_{ir})+(1-q_{kr}^{(t)})f_{r0}(x_{ir})} \times p_{ik}.
+\label{eq:ik1}
+\end{eqnarray}
+Take (\ref{eq:ik}) and (\ref{eq:ik1}) into (\ref{eq:Q}), we can obtain $Q(\pi,Q|\pi^{(t)}, Q^ {(t)})$. \\
+
+In the M-step, we find $\pi^{(t+1)}$ and $Q^ {(t+1)}$ by maximize $Q(\pi,Q|\pi^{(t)}, Q^ {(t)})$. Notice that $\sum_k \pi_k=1$, we write the Lagrangian of the problem
+\begin{equation*}
+L(\pi,Q) = Q(\pi,Q|\pi^{(t)}, Q^ {(t)})+ \lambda(\sum_k \pi_k-1).
+\end{equation*}
+By solving
+\begin{eqnarray*}
+\frac{\partial L}{\partial \lambda} &=&0, \\
+\frac{\partial L}{\partial \pi_k} &=&0, \\
+\frac{\partial L}{\partial q_{kr}} &=& 0,
+\end{eqnarray*}
+we have
+\begin{eqnarray}
+\pi_k^{(t+1)} = \frac{1}{n} \sum_{i=1}^n p_{ik}, \\
+q_{kr}^ {(t+1)}=\frac{\sum_{i=1}^n p_{ikr1}}{\sum_{i=1}^n p_{ik}}.
+\end{eqnarray}
+Therefore, we could iteratively use the EM algorithm and obtain the estimation for $\pi$ and $Q$.
+
+\subsection{Model Selection: Bayesian Information Criterion}
+
+To determine the motif number of $K$ , we use Bayesian Information Criterion(BIC). The BIC in our setting is written as 
+\begin{eqnarray}
+{\rm BIC}(K) &=& -2\log L(\hat \pi,\hat Q;X) + (K\times R+K-1+N_f)\times \log n \nonumber \\
+&=& -2 \sum_{i=1}^n \log \left \{  \sum_{k=1}^K \hat \pi_k\prod_{r=1}^R [\hat q_{kr}f_{r1}(x_{ir})+(1-\hat q_{kr})f_{r0}(x_{ir})]   \right \} \nonumber\\
+&+& (K\times R+K-1+N_f)\times \log n.
+\end{eqnarray}
+Here $N_f$ is the number of parameters in $f_{r0}$ and $f_{r1}$, $r = 1,\ldots, R$. We choose the K with the smallest BIC, that is 
+\begin{equation}
+\hat K = \argmin_{K\geq1} {\rm BIC}(K).
+\end{equation}
+
+\subsection{Example}
+
+In this section, we will introduce a trivial example applying CorMotif method. Under our setting, suppose
+\begin{eqnarray*}
+f_{r0}(x_{ir}) &=& N(x_{ir};0,1), \\
+f_{r1}(x_{ir}) &=& N(x_{ir};0,1+\sigma_r^2).
+\end{eqnarray*}
+We have
+ $$\log f_{r1}(x_{ir})  = -\frac{1}{2} \log(1+\sigma_r^2)-\frac{x_{ir}^2}{2(1+\sigma_r^2)}+constant.$$
+ Solving 
+$$\frac{\partial Q}{\partial \sigma_r^2} =0 , $$
+we get
+$$\sigma_r^{2(t+1)}= \frac{\sum_{i=1}^n \sum_{k=1}^K (x_{ir}^2-1)p_{ikr1}}{\sum_{i=1}^n \sum_{k=1}^K p_{ikr1}}.$$
+
+\begin{thebibliography}{2015}
+\bibitem{ref1} Joint analysis of differential gene expression in multiple studies using correlation motifs, Ji HK and Wong WH, Biostatistics, 2015, doi: 10.1093/biostatistics/kxu038 
+\bibitem{ref2} Linear models and empirical Bayes methods for assessing differential expression in microarray experiments. Smyth GK, Statistical Applications in Genetics and Molecular Biology 3, 3.
+\end{thebibliography}
+
+\end{document}  
+
