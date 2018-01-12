@@ -1,7 +1,7 @@
 ---
-title: "Untitled"
-author: "First Last"
-date: YYYY-MM-DD
+title: "MTB Expression Analysis"
+author: "Zhiwei Ma"
+date: 2018-01-12
 output: html_document
 ---
 
@@ -24,7 +24,54 @@ knitr::read_chunk("chunks.R")
 ```{r code-version, echo=FALSE, results='asis'}
 ```
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
+```
+
 <!-- Add your analysis here -->
+
+## Construction of Z-scores
+
+For each bacterial infection at certain timepoint, we have six controls and six treatments, denoted as $X_1,X_2,X_3,X_4,X_5,X_6$ and $Y_1,Y_2,Y_3,Y_4,Y_5,Y_6$. Then the estimated effect size and variance are defined below:
+$$
+\hat\beta = \bar Y-\bar X; \\
+\hat s = \sqrt{\hat\sigma_x^2/6+\hat\sigma_y^2/6.}
+$$
+Here $\bar X$, $\bar Y$ are sample means, and $\hat\sigma_x$, $\hat\sigma_y$ are sample 
+variances.
+
+## Motifs
+
+At 18 hours post-infection, There are eight bacterial infections: "Rv.18", "Rv+.18", "GC.18", "BCG.18", "Smeg.18", "Yers.18", "Salm.18", "Staph.18". Here we set $K=5$, the same like [Blischak, et al, 2015](https://www.nature.com/articles/srep16882). The motifs are shown below. 
+
+```{r}
+source('../code/function.R')
+betahat = read.table("../data/betahat.txt", header = TRUE, sep = "\t",
+               stringsAsFactors = FALSE)
+sebetahat = read.table("../data/sebetahat.txt", header = TRUE, sep = "\t",
+               stringsAsFactors = FALSE)
+z18_k5 = generic.cormotif(betahat[,9:16],sebetahat[,9:16],K=5,mess=FALSE)
+plotMotif(z18_k5$bestmotif)
+```
+
+## Detection of eQTLs
+
+Download the 198 response eQTLs from [Barreiro et al, 2012](https://www.ncbi.nlm.nih.gov/pubmed/22233810) (179 out of the 198 were also expressed in our study). Apply our method, we can compute the $lfsr$ (local false sign rate) for each effect. Set the thresholding at 0.01, we detect 59 differential expression out of 179 genes. 
+
+```{r}
+dat_cpm <- read.table("../data/table-s1.txt", header = TRUE, sep = "\t",
+                      stringsAsFactors = FALSE)
+# The first two columns are gene information
+rownames(dat_cpm) <- dat_cpm$id
+gene_names <- dat_cpm$name
+names(gene_names) <- dat_cpm$id
+
+id = rownames(dat_cpm)
+lfsr18 = z18_k5$lfsr[[1]][,1] 
+list = id[lfsr18<0.01]
+a = intersect(S3[,2],list)
+print(gene_names[a])
+```
 
 ## Session information
 
