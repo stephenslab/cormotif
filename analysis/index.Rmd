@@ -11,5 +11,5 @@ output:
 2. [Analysis for the trend of loglike](Trend_of_loglike.html)
 3. [Estimation of effect sizes and detection of significant effects](estimation_of_effect_size.html)
 4. [MTB Expression Analysis](MTB_Expression_Analysis.html)
-4. [Simulation work based on original cormotif](Simulation.html)
+5. [Simulation work based on original cormotif](Simulation.html)
 
