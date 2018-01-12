@@ -316,7 +316,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2018-01-12</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 3d746d4</p>
+<p><strong>Code version:</strong> ee7c372</p>
 <!-- Add your analysis here -->
 <div id="construction-of-z-scores" class="section level2">
 <h2>Construction of Z-scores</h2>
@@ -329,7 +329,7 @@ shared across the workflowr files. -->
 </div>
 <div id="motifs" class="section level2">
 <h2>Motifs</h2>
-<p>At 18 hours post-infection, There are eight bacterial infections: “Rv.18”, “Rv+.18”, “GC.18”, “BCG.18”, “Smeg.18”, “Yers.18”, “Salm.18”, “Staph.18”. Here we set <span class="math inline">\(K=5\)</span>, the same like <a href="https://www.nature.com/articles/srep16882">Blischak, et al, 2015</a>. The motifs are shown below.</p>
+<p>At 18 hours post-infection, There are eight bacterial infections: “Rv.18”, “Rv+.18”, “GC.18”, “BCG.18”, “Smeg.18”, “Yers.18”, “Salm.18”, “Staph.18”. Here we set <span class="math inline">\(K=5\)</span>, the same as <a href="https://www.nature.com/articles/srep16882">Blischak et al, 2015</a>. The learned motifs are shown below.</p>
 <pre class="r"><code>source(&#39;../code/function.R&#39;)</code></pre>
 <pre><code>Loading required package: Matrix</code></pre>
 <pre class="r"><code>betahat = read.table(&quot;../data/betahat.txt&quot;, header = TRUE, sep = &quot;\t&quot;,
@@ -350,14 +350,43 @@ z18_k5 = generic.cormotif(betahat[,9:16],sebetahat[,9:16],K=5,mess=FALSE)</code>
 gene_names &lt;- dat_cpm$name
 names(gene_names) &lt;- dat_cpm$id
 
-S3 = read.csv(&quot;../data/S3.csv&quot;,
-              header = FALSE,stringsAsFactors = FALSE)
-id = rownames(dat_cpm)
+S3 = read.csv(&quot;../data/S3.csv&quot;,header = FALSE,stringsAsFactors = FALSE)
+id = names(gene_names)
+ll = intersect(S3[,2],id)
 lfsr18 = z18_k5$lfsr[[1]][,1] 
 list = id[lfsr18&lt;0.01]
 a = intersect(S3[,2],list)
 print(gene_names[a])</code></pre>
-<pre><code>named character(0)</code></pre>
+<pre><code>ENSG00000142945 ENSG00000152127 ENSG00000071051 ENSG00000115896 
+        &quot;KIF2C&quot;         &quot;MGAT5&quot;          &quot;NCK2&quot;         &quot;PLCL1&quot; 
+ENSG00000144118 ENSG00000114631 ENSG00000151422 ENSG00000164182 
+         &quot;RALB&quot;        &quot;PODXL2&quot;           &quot;FER&quot;       &quot;NDUFAF2&quot; 
+ENSG00000091136 ENSG00000166508 ENSG00000131669 ENSG00000119977 
+        &quot;LAMB1&quot;          &quot;MCM7&quot;         &quot;NINJ1&quot;         &quot;TCTN3&quot; 
+ENSG00000107833 ENSG00000149547 ENSG00000110713 ENSG00000171792 
+         &quot;NPM3&quot;          &quot;EI24&quot;         &quot;NUP98&quot;         &quot;RHNO1&quot; 
+ENSG00000103275 ENSG00000185504 ENSG00000129219 ENSG00000109099 
+        &quot;UBE2I&quot;      &quot;C17orf70&quot;          &quot;PLD2&quot;         &quot;PMP22&quot; 
+ENSG00000169689 ENSG00000109084 ENSG00000141655 ENSG00000108107 
+       &quot;STRA13&quot;        &quot;TMEM97&quot;     &quot;TNFRSF11A&quot;         &quot;RPL28&quot; 
+ENSG00000130477 ENSG00000176022 ENSG00000072694 ENSG00000213625 
+       &quot;UNC13A&quot;       &quot;B3GALT6&quot;        &quot;FCGR2B&quot;        &quot;LEPROT&quot; 
+ENSG00000119812 ENSG00000144485 ENSG00000115718 ENSG00000124356 
+       &quot;FAM98A&quot;          &quot;HES6&quot;          &quot;PROC&quot;        &quot;STAMBP&quot; 
+ENSG00000180834 ENSG00000213672 ENSG00000093217 ENSG00000118564 
+       &quot;MAP6D1&quot;       &quot;NCKIPSD&quot;          &quot;XYLB&quot;         &quot;FBXL5&quot; 
+ENSG00000177058 ENSG00000039319 ENSG00000091129 ENSG00000186193 
+      &quot;SLC38A9&quot;       &quot;ZFYVE16&quot;         &quot;NRCAM&quot;        &quot;SAPCD2&quot; 
+ENSG00000138172 ENSG00000167995 ENSG00000134954 ENSG00000189046 
+       &quot;CALHM2&quot;         &quot;BEST1&quot;          &quot;ETS1&quot;        &quot;ALKBH2&quot; 
+ENSG00000111726 ENSG00000198056 ENSG00000150977 ENSG00000050438 
+         &quot;CMAS&quot;         &quot;PRIM1&quot;        &quot;RILPL2&quot;        &quot;SLC4A8&quot; 
+ENSG00000126822 ENSG00000138617 ENSG00000166546 ENSG00000133392 
+      &quot;PLEKHG3&quot;        &quot;PARP16&quot;         &quot;BEAN1&quot;         &quot;MYH11&quot; 
+ENSG00000102978 ENSG00000182481 ENSG00000141140 ENSG00000006025 
+       &quot;POLR2C&quot;         &quot;KPNA2&quot;         &quot;MYO19&quot;        &quot;OSBPL7&quot; 
+ENSG00000167670 ENSG00000100030 
+       &quot;CHAF1A&quot;         &quot;MAPK1&quot; </code></pre>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
