@@ -1,4 +1,5 @@
 library("SQUAREM")
+library("REBayes")
 
 source('../code/lik.R')
 source('../code/set_data.R')
@@ -49,6 +50,7 @@ generic.cormotif=function(betahat,sebetahat,mixcompdist = "normal",optmethod = "
   
   ## fit the model via EM 
   fitresult<-list()
+  print('Start EM algorithm')
   for(i in 1:length(K)){
     fitresult[[i]] = gcmfit(matrix_llik,K=K[i],w_init=w,pi_thresh=pi_thresh,mess=mess)
   }
@@ -133,6 +135,7 @@ gcmfit = function(matrix_llik,K=1,max.iter=300,tol = 1e-4,w_init,pi_thresh,mess=
     tempmax = apply(matrix_llik2,1,max)
     matrix_lik2 = exp(matrix_llik2-tempmax)
     fit.p=mixEM(matrix_lik=matrix_lik2, prior=1,pi_init = p)
+    #fit.p=mixIP(matrix_lik=matrix_lik2, prior=rep(1,K),pi_init = p)
     p.new = normalize(fit.p$pihat + 1e-8)
     #print(p.new)
     
@@ -161,6 +164,7 @@ gcmfit = function(matrix_llik,K=1,max.iter=300,tol = 1e-4,w_init,pi_thresh,mess=
           lnorm = apply(matrix_llik3,1,max)
           matrix_lik3 = exp(matrix_llik3 - lnorm)
           fit.w = w_mixEM(matrix_lik=matrix_lik3, prior=1,pi_init = W[[r]][k,],weights = ww)
+          #fit.w = mixIP(matrix_lik=matrix_lik3, prior=rep(1,L),pi_init = W[[r]][k,],weights = ww)
           W.new[[r]][k,] = fit.w$pihat
         }
       }
@@ -218,6 +222,80 @@ comp_lfdsr= function(bestmotif, g, data){
   list(lfdr=lfdr,lfsr=lfsr,post_mean = post_mean,Theta=Theta)
 }
 
+layout(matrix(1:2,ncol=2))
+R = length(z18_k5$bestmotif$W)
+K = dim(z18_k5$bestmotif$W[[1]])[1]
+q = matrix(0,nrow=K,ncol=R)
+for(r in 1:R){
+  q[,r] = 1-z18_k5$bestmotif$W[[r]][,1]
+}
+u = 1:R
+v = 1:K
+image(u,v,t(q),
+      col=gray(seq(from=1,to=0,by=-0.1)),xlab="Bacterial infection",yaxt = "n",
+      ylab="Expression pattern",main="pattern")
+axis(2,at=1:length(v))
+axis(1,at=1:length(u))
+for(i in 1:(length(u)+1)){
+  abline(v=(i-0.5))
+}
+for(i in 1:(length(v)+1)) {
+  abline(h=(i-0.5))
+}
 
+Ng=10000
+if(is.null(z18_k5$bestmotif$clustlike)!=TRUE)
+  Ng=nrow(z18_k5$bestmotif$clustlike)
+genecount=floor(z18_k5$bestmotif$pi*Ng)
+NK=K
+plot(0,0.7,pch=".",xlim=c(0,1.2),ylim=c(0.75,NK+0.25),
+     frame.plot=FALSE,axes=FALSE,xlab="Number of genes",ylab="", main="frequency")
+segments(0,0.7,z18_k5$bestmotif$pi[1],0.7)
+rect(0,1:NK-0.3,z18_k5$bestmotif$pi,1:NK+0.3,
+     col="dark grey")
+mtext(1:NK,at=1:NK,side=2,cex=0.8)
+text(z18_k5$bestmotif$pi+0.15,1:NK,
+     labels=floor(z18_k5$bestmotif$pi*Ng))
+
+plotMotif = function(bestmotif){
+  layout(matrix(1:2,ncol=2))
+  R = length(bestmotif$W)
+  K = dim(bestmotif$W[[1]])[1]
+  q = matrix(0,nrow=K,ncol=R)
+  for(r in 1:R){
+    q[,r] = 1-bestmotif$W[[r]][,1]
+  }
+  u = 1:R
+  v = 1:K
+  image(u,v,t(q),
+        col=gray(seq(from=1,to=0,by=-0.1)),xlab="Bacterial infection",yaxt = "n",
+        ylab="Expression pattern",main="pattern")
+  axis(2,at=1:length(v))
+  axis(1,at=1:length(u))
+  for(i in 1:(length(u)+1)){
+    abline(v=(i-0.5))
+  }
+  for(i in 1:(length(v)+1)) {
+    abline(h=(i-0.5))
+  }
+  
+  Ng=10000
+  if(is.null(bestmotif$clustlike)!=TRUE)
+    Ng=nrow(bestmotif$clustlike)
+  genecount=floor(bestmotif$pi*Ng)
+  NK=K
+  plot(0,0.7,pch=".",xlim=c(0,1.2),ylim=c(0.75,NK+0.25),
+       frame.plot=FALSE,axes=FALSE,xlab="Number of genes",ylab="", main="frequency")
+  segments(0,0.7,bestmotif$pi[1],0.7)
+  rect(0,1:NK-0.3,bestmotif$pi,1:NK+0.3,
+       col="dark grey")
+  mtext(1:NK,at=1:NK,side=2,cex=0.8)
+  text(bestmotif$pi+0.15,1:NK,
+       labels=floor(bestmotif$pi*Ng))
+}
+
+#plotMotif(z18_k5$bestmotif)
+  
+  
 #results = generic.cormotif(betahat,sebetahat,K=1:4)
 

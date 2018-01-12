@@ -192,7 +192,7 @@ for(g in 1:G){
   }
 }
 
-
+fit2 = generic.cormotif(betahat,sebetahat,K=2:5,mess=TRUE)
 
 ## sim 2
 K = 4
