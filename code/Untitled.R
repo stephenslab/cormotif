@@ -161,9 +161,10 @@ for(r in 1:R){
 ## sim1
 K = 4
 D = 4
-G = 1000
+G = 5000
 sigma2 = c(16,16,16,16)
-pi0 = c(0.02,0.04,0.04,0.9)
+#pi0 = c(0.02,0.04,0.04,0.9)
+pi0 = c(0.1,0.2,0.2,0.5)
 q0 = matrix(0,nrow=K,ncol=D)
 q0[1,] = c(1,1,1,1)
 q0[2,] = c(1,1,0,0)
@@ -192,7 +193,7 @@ for(g in 1:G){
   }
 }
 
-fit2 = generic.cormotif(betahat,sebetahat,K=2:5,mess=TRUE)
+fit2 = generic.cormotif(betahat,sebetahat,K=4,mess=TRUE)
 
 ## sim 2
 K = 4
