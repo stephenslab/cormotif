@@ -9,10 +9,11 @@
 <meta name="generator" content="pandoc" />
 
 
-<meta name="author" content="First Last" />
+<meta name="author" content="Zhiwei Ma" />
 
+<meta name="date" content="2018-01-12" />
 
-<title>Untitled</title>
+<title>MTB Expression Analysis</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -301,9 +302,9 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Untitled</h1>
-<h4 class="author"><em>First Last</em></h4>
-<h4 class="date"><em>YYYY-MM-DD</em></h4>
+<h1 class="title toc-ignore">MTB Expression Analysis</h1>
+<h4 class="author"><em>Zhiwei Ma</em></h4>
+<h4 class="date"><em>2018-01-12</em></h4>
 
 </div>
 
@@ -315,31 +316,46 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2018-01-12</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 2b4c6b4</p>
+<p><strong>Code version:</strong> 42a2a70</p>
 <!-- Add your analysis here -->
+<div id="construction-of-z-scores" class="section level2">
+<h2>Construction of Z-scores</h2>
+<p>For each bacterial infection at certain timepoint, we have six controls and six treatments, denoted as <span class="math inline">\(X_1,X_2,X_3,X_4,X_5,X_6\)</span> and <span class="math inline">\(Y_1,Y_2,Y_3,Y_4,Y_5,Y_6\)</span>. Then the estimated effect size and variance are defined below: <span class="math display">\[
+\hat\beta = \bar Y-\bar X; \\
+\hat s = \sqrt{\hat\sigma_x^2/6+\hat\sigma_y^2/6.}
+\]</span> Here <span class="math inline">\(\bar X\)</span>, <span class="math inline">\(\bar Y\)</span> are sample means, and <span class="math inline">\(\hat\sigma_x\)</span>, <span class="math inline">\(\hat\sigma_y\)</span> are sample variances.</p>
+</div>
+<div id="motifs" class="section level2">
+<h2>Motifs</h2>
+<p>At 18 hours post-infection, There are eight bacterial infections: “Rv.18”, “Rv+.18”, “GC.18”, “BCG.18”, “Smeg.18”, “Yers.18”, “Salm.18”, “Staph.18”. Here we set <span class="math inline">\(K=5\)</span>, the same like <a href="https://www.nature.com/articles/srep16882">Blischak, et al, 2015</a>. The motifs are shown below.</p>
+<pre class="r"><code>source(&#39;../code/function.R&#39;)
+betahat = read.table(&quot;../data/betahat.txt&quot;, header = TRUE, sep = &quot;\t&quot;,
+               stringsAsFactors = FALSE)
+sebetahat = read.table(&quot;../data/sebetahat.txt&quot;, header = TRUE, sep = &quot;\t&quot;,
+               stringsAsFactors = FALSE)
+z18_k5 = generic.cormotif(betahat[,9:16],sebetahat[,9:16],K=5,mess=FALSE)
+plotMotif(z18_k5$bestmotif)</code></pre>
+</div>
+<div id="detection-of-eqtls" class="section level2">
+<h2>Detection of eQTLs</h2>
+<p>Download the 198 response eQTLs from <a href="https://www.ncbi.nlm.nih.gov/pubmed/22233810">Barreiro et al, 2012</a> (179 out of the 198 were also expressed in our study). Apply our method, we can compute the <span class="math inline">\(lfsr\)</span> (local false sign rate) for each effect. Set the thresholding at 0.01, we detect 59 differential expression out of 179 genes.</p>
+<pre class="r"><code>dat_cpm &lt;- read.table(&quot;../data/table-s1.txt&quot;, header = TRUE, sep = &quot;\t&quot;,
+                      stringsAsFactors = FALSE)
+# The first two columns are gene information
+rownames(dat_cpm) &lt;- dat_cpm$id
+gene_names &lt;- dat_cpm$name
+names(gene_names) &lt;- dat_cpm$id
+
+id = rownames(dat_cpm)
+lfsr18 = z18_k5$lfsr[[1]][,1] 
+list = id[lfsr18&lt;0.01]
+a = intersect(S3[,2],list)
+print(gene_names[a])</code></pre>
+</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.4.3 (2017-11-30)
-Platform: x86_64-apple-darwin15.6.0 (64-bit)
-Running under: macOS Sierra 10.12.5
-
-Matrix products: default
-BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
-LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
-
-locale:
-[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
-
-attached base packages:
-[1] stats     graphics  grDevices utils     datasets  methods   base     
-
-loaded via a namespace (and not attached):
- [1] compiler_3.4.3  backports_1.1.0 magrittr_1.5    rprojroot_1.2  
- [5] tools_3.4.3     htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.13   
- [9] stringi_1.1.5   rmarkdown_1.6   knitr_1.17      git2r_0.19.0   
-[13] stringr_1.2.0   digest_0.6.12   evaluate_0.10.1</code></pre>
 </div>
 
 <hr>
