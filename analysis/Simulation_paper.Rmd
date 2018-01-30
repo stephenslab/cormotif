@@ -38,11 +38,11 @@ We set unit number $n = 10000$, and study number $R = 4$. We set every observati
 
 To fit the model, set $K = 1:10$.
 
-```{r}
+```{r,cache=TRUE}
 source('../code/function.R')
 K = 4
 D = 4
-G = 10000
+G = 50
 sigma2 = c(16,16,16,16)
 pi0 = c(0.02,0.04,0.04,0.9)
 q0 = matrix(0,nrow=K,ncol=D)
