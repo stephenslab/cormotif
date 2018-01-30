@@ -42,7 +42,7 @@ To fit the model, set $K = 1:10$.
 source('../code/function.R')
 K = 4
 D = 4
-G = 50
+G = 10000
 sigma2 = c(16,16,16,16)
 pi0 = c(0.02,0.04,0.04,0.9)
 q0 = matrix(0,nrow=K,ncol=D)
