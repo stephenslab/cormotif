@@ -1,5 +1,5 @@
 ---
-title: "Simulation in Paper"
+title: "Simulation in Paper3"
 author: "Zhiwei Ma"
 date: 2018-01-28
 output: html_document
