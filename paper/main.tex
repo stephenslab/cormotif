@@ -1,13 +1,20 @@
-\documentclass[11pt]{article}   	
-\usepackage{geometry}                		
-\geometry{letterpaper}                   		
-\usepackage{setspace}
-\doublespacing
+\documentclass[12pt]{article}
+\topmargin= -0.4in
+\textheight = +8.9in
+\oddsidemargin = 0.05in
+\evensidemargin = 0.05in
+\textwidth = 6.5in
 
+%%%%%%%%%%%%%
 \usepackage{graphicx}					
 \usepackage{amssymb}
 \usepackage{amsmath,amsfonts}
 \usepackage{bm}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{enumerate}
 
 \newtheorem{assumption}{Assumption}
 \newtheorem{remark}{Remark}
@@ -18,29 +25,94 @@
 
 \DeclareMathOperator*{\argmax}{argmax}
 \DeclareMathOperator*{\argmin}{argmin}
-
-
-\title{Generic Cormotif}
-\author{Zhiwei Ma}
-\date{September 2017}
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
 
-\maketitle
+\noindent
+\thispagestyle{empty}
+\underline{\bf Master's Paper of the Department of Statistics, the
+  University of Chicago} 
+\\~~(Internal document only, not for circulation) 
 
+\vspace{1.8in}
+\begin{center}
+{\bf\LARGE  Joint analysis of differential gene expression in multiple studies
+using Bayesian method}
+%\\~\\
+%{\bf\Large --- A Sample Format}
+
+
+\vspace{1.4in}
+{\Large Zhiwei Ma}
+
+\vspace{1.3in}
+{\Large Advisor(s): Matthew Stephens} %\\{\small (at least
+  %one statistics faculty member)}}
+
+\end{center}
+
+\vspace{.6in}
+{\Large Approved} ~\underline{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+
+\vspace{.2in}
+{\Large Date} ~\underline{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+
+\vfill
+\begin{center}{\large February 15, 2018}\end{center}
+
+\newpage
+\pagestyle{plain}
+\setcounter{page}{1}
+
+\begin{abstract}
+
+\vspace{7mm}\noindent  We introduce a new Empirical Bayes approach for jointly
+analyzing differential gene expression in multiple studies or under
+multiple experimental conditions. Our method searches for a small number
+of latent prior distribution vectors to capture the dependence among
+multiple studies. Compared with independent analysis of each study, our joint analysis approach improves both power to detect significant effects and effect-size estimation. Model fitting procedures
+are implemented using expectation maximization (EM) algorithm. 
+\end{abstract}
+
+%\newpage
+\vspace{1.5in}
+\tableofcontents
+
+
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%
 
-We introduce a new Empirical Bayes approach for jointly analyzing differential gene expression in multiple studies or under multiple experimental conditions (e.g., measured in different cell types), which allows for correlations among studies. Compared with existing methods, the new approach improves power and effect-size estimation. Model fitting procedures are implemented using expectation maximization (EM).
-%\textit{lfdr}
+\vspace{4mm} Detecting differentially expressed genes across multiple conditions or studies is an important task in the analysis of gene expression data. Examples including detecting the genes which are specific to MTB (Mycobacterium tuberculosis) infection \cite{Blischak2015}; or studying vertebrate sonic hedgehog (SHH) pathway \cite{Wei2015}; or identifying eQTLs in multiple cell-type or tissues \cite{Urbut2017}. 
+
+\vspace{4mm}\noindent The simplest and the most common solution to this problem is to analyze data in different studies one at a time, and then identify the overlap of significant results in multiple studies. Methods for single study including \emph{limma} \cite{Smyth} or \emph{DESeq} \cite{Anders2010} to estimate effect sizes, followed by
+methods like \emph{qvalue} \cite{Storey2003} or \emph{ash} \cite{Stephens2017} to estimate false discovery rates. However when data from multiple related gene expression studies are available, separately analyzing each study is not ideal as it may fail to detect important genes with consistent but relatively weak differential signals in multiple studies. 
+
+\vspace{4mm}\noindent To address the deficiencies of study-by-study analyses, several methods have been developed for joint analysis of effects under multiple studies. \emph{Cormotif} \cite{Wei2015} used a small number of latent probability vectors called ``correlation motifs'' to model the major correlation patterns among the studies. This approach can handle all possible study-specific differential patterns in a computationally-tractable way. However, its simplicity substantially reduce flexibility: firstly, \emph{Cormotif} adopts a two-stage design and uses moderated $t$-statistics produced by \emph{limma} \cite{Smyth}. The restrictive assumptions to the estimated effect sizes greatly weakens the adaptability in different situations; secondly, \emph{Cormotif} focus only on testing for the significant effects in each condition, but not on estimating effect sizes, which might be interesting in assessing heterogeneity of effects among conditions. 
+
+\vspace{4mm}\noindent By applying an Empirical Bayesian method, \emph{mash} \cite{Urbut2017} builds a hierarchical model for jointly analyzing effect sizes. \emph{mash} is an extension of \emph{ash} by setting the priors of effect sizes as a mixture of multivariate normal distribution with both data-driven and canonical covariance matrices. However, \emph{mash} fails to include some common situations, such as when two studies have both positive or negative effects at the same time for some genes. In addition, simple normal distribution may not be able to capture the prior distributions for the effect sizes well. 
+
+\vspace{4mm}\noindent Here we introduce a more flexible method that combines the attractive features of existing methods. Specifically, we extend the models in \emph{Cormotif} \cite{Wei2015} by allowing general unimodal distributions for the effect size distributions in each component. These general unimodal distributions are modeled using finite mixtures as in \emph{ash} \cite{Stephens2017}. Compared with \emph{Cormotif}, our approach can handle both effect size estimation and testing for significant effects by computing the posterior distributions of the effect sizes. Compared with \emph{mash}, our model includes the situation when two studies are conditional independent and we give more freedom for choosing the prior distribution. However, unlike \emph{mash} we do not allow for correlations in effect sizes across studies within each mixture component. Another feature of our approach is that our method is adaptive to both the amount of signal in the data and the measurement precision of each observation. 
+
+\vspace{4mm}\noindent Our approach is a general method and can be applied to various problems in analyzing differential gene expression in multiple studies. We provide implementation in an R package, {\tt miximash}, available at \url{https://github.com/stephenslab/miximash}. Code and instructions for reproducing analyses and figures in this paper are at \url{https://github.com/stephenslab/cormotif}. 
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methods}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\vspace{5mm}
 \subsection{Model Outline}
 
-Our method is designed to estimate the effects of multiple units in multiple studies. Suppose there are totally $n$ units and $R$ studies. Let $\beta = [\beta_{jr}]_{J\times R}$ denote "effects" of interest. For instance, $\beta_{jr}$ could be the difference in the mean expression of gene $j$ at study $r$ under two conditions. 
+\vspace{4mm} Our method is designed to estimate the effects of multiple units in multiple studies. Suppose there are totally $n$ units and $R$ studies. Let $\beta = [\beta_{jr}]_{J\times R}$ denote ``effects" of interest. For instance, $\beta_{jr}$ could be the difference in the mean (log) expression of gene $j$ under study $r$ in two conditions. 
 
-Assume that the available data are estimates $\hat \beta = [\hat \beta_{jr}]_{J\times R}$ of the effects, and the corresponding estimated standard errors $\hat s = [\hat s_{jr}]_{J\times R}$. Let $\beta_j:=(\beta_{j1},\ldots,\beta_{jr})'$, where $j=1,2,\ldots,n$. Similarly for $\hat \beta_j$ and $\hat s_j$,
+\vspace{4mm}\noindent Assume that the available data are estimates $\hat \beta = [\hat \beta_{jr}]_{J\times R}$ of the effects, and the corresponding estimated standard errors $\hat s = [\hat s_{jr}]_{J\times R}$. Let $\beta_j:=(\beta_{j1},\ldots,\beta_{jr})'$, where $j=1,2,\ldots,n$. Similar for $\hat \beta_j$ and $\hat s_j$.
 
-Similar to the original \textit{Cormotif} \cite{cormotif}, we assume that all units fall into $K$ different classes. Besides, we have the following assumptions, which distinguish our model from existing ones:
+\vspace{4mm}\noindent Similar to the original \emph{Cormotif} \cite{Wei2015}, we assume that all units fall into $K$ different classes to reduce the complexity of parameter space. Specifically, we have the following key assumptions:
 
 \begin{assumption}Each units $j$ is randomly and independently assigned to a class label $z_j$ according to probability $\pi=(\pi_1,\ldots,\pi_K)$. Here $\pi_k=P(z_j=k)$ is the prior probability that a unit belongs to class $k$. We have $\sum_k\pi_k = 1$.
 \end{assumption}
@@ -48,99 +120,220 @@ Similar to the original \textit{Cormotif} \cite{cormotif}, we assume that all un
 \begin{assumption}Given unit's class label $z_j=k$, the effects $\beta_{j1},\beta_{j2},\ldots,\beta_{jR}$ are independent from unimodal distribution $g_{kr}$, that is $p(\beta_{j}|z_j =k,\hat s)=\prod_{r=1}^R p(\beta_{jr}|z_j =k,\hat s)=\prod_{r=1}^Rg_{kr}( \beta_{jr};\hat s)$
 \end{assumption}
 
-%\begin{assumption} The effects $\beta_1,\beta_2,\ldots,\beta_n$ are independent given $\pi$ and $g$.
-%\end{assumption}
 
-Here we describe the simplest version of our model. First we assume the effect $\beta_{jr}$ is independent of their standard errors $\hat s_{jr}$. Then by Assumption 1 and 2, we have
+\vspace{4mm}\noindent Here we describe the simplest version of our model, more embellishments can be found in Detailed Method. First we assume the effect $\beta_{jr}$ is independent of their standard errors $\hat s_{jr}$. Then by Assumption 1 and 2, we have
 \begin{equation}
 p(\beta|\pi,g,\hat s) = \prod_{j=1}^np(\beta_j|\pi,g,\hat s) = \prod_{j=1}^n \left [\sum_{k=1}^K\pi_k\prod_{r=1}^R  g_{kr}(\beta_{jr})\right ]
 %p(\beta_j|\pi,g,\hat s) = \sum_{k=1}^K\pi_k\prod_{r=1}^R  g_{kr}(\beta_{jr}),
 \label{eq:1}
 \end{equation}
-
-where $g$ represents $\{g_{kr}|k = 1,\ldots,K$, $r=1,\ldots,R\}$. A simple way to implement the unimodal assumption (UA) is to assume that $g_{kr}$ is a mixture of a point mass at 0 and a mixture of $zero$-$mean$ normal distribution \cite{ash}:
+where $g$ represents $\{g_{kr}|k = 1,\ldots,K$, $r=1,\ldots,R\}$, the set of unimodal distributions. A simple way to implement the unimodal assumption (UA) is to assume that $g_{kr}$ is a mixture of a point mass at 0 and a mixture of {\it zero-mean} normal distribution \cite{Stephens2017}:
 \begin{equation}
 g_{kr}(\cdot) =  w_0^{kr}\delta_0(\cdot)+\sum_{l=1}^L w_l^{kr}N(\cdot;0,\sigma_l^2),
 \label{eq:2}
 \end{equation}
-where $\delta_0(\cdot)$ denotes a point mass on 0, and $N(\cdot;\mu,\sigma^2)$ denotes the density of Normal distribution with mean $\mu$ and variance $\sigma^2$. Here we assume  $\sigma_1,\sigma_2,\ldots,\sigma_L$ are known and fixed positive numbers forming a wide and dense grid, which are built via a data-driven approach.
+where $\delta_0(\cdot)$ denotes a point mass on 0, and $N(\cdot;\mu,\sigma^2)$ denotes the density of Normal distribution with mean $\mu$ and variance $\sigma^2$. Here we assume  $\sigma_1,\sigma_2,\ldots,\sigma_L$ are known and fixed positive numbers forming a wide and dense grid. By using a sufficiently large $L$ the finite mixture (\ref{eq:2}) can approximate any scale mixture of zero-centered normals to arbitrary accuracy. $\sigma_1,\sigma_2,\ldots,\sigma_L$ are built via a data-driven approach--see Implementation Details. The mixture proportions $w^{kr}=(w^{kr}_0,\ldots,w^{kr}_L)$ for $k=1,\ldots,K$, $r=1,\ldots,R$ and $\pi=(\pi_1,\ldots,\pi_K)$ are the parameters to be estimated. 
 
-For likelihood $p(\hat \beta|\beta,\hat s)$, we assume a Normal approximation:
+\vspace{4mm}\noindent For likelihood $p(\hat \beta|\beta,\hat s)$, we assume a Normal approximation \cite{Wakefield2009}:
 \begin{equation}
 p(\hat \beta|\beta,\hat s) = \prod_{j=1}^np(\hat \beta_j|\beta_j,\hat s) = \prod_{j=1}^n\prod_{r=1}^RN(\hat\beta_{jr};\beta_{jr},\hat s_{jr}^2).
 \label{eq:3}
 \end{equation}
 
-Together, (\ref{eq:1})-(\ref{eq:3}) imply that 
+\vspace{4mm}\noindent Together, (\ref{eq:1})-(\ref{eq:3}) imply that 
 \begin{eqnarray}
 p(\hat\beta|\pi,g,\hat s) &=& \prod_{j=1}^n\left[\sum_{k=1}^K\pi_k\prod_{r=1}^R(g_{kr}*N_{jr})(\hat\beta_{jr})\right] \nonumber \\ 
 &=& \prod_{j=1}^n\left\{\sum_{k=1}^K\pi_k\prod_{r=1}^R\left[ \sum_{l=0}^Lw_l^{kr}N(\hat\beta_{jr};0,\sigma_l^2+\hat s_{jr}^2)\right]\right\}.
 \label{eq:4}
 \end{eqnarray}
-Here $N_{jr}$ denotes $N(\cdot;0,\hat s_{jr}^2)$ and $*$ means the convolution of two functions. We define $\sigma_0:=0$.
+Here $N_{jr}$ denotes $N(\cdot;0,\hat s_{jr}^2)$ and $*$ means the convolution of two functions. We define $\sigma_0:=0$ in the formula above.
 
-Model (\ref{eq:4}) is the extension of original  \textit{Cormotif}: set $L=1$ and assume for any fixed $r$, $\hat s_{jr}^2$s are identical for all $j$, (\ref{eq:4}) is just Cormotif under Normal distribution. Similar to Cormotif, our model can capture the correlation among multiple studies. To see this, consider the likelihood for unit $j$. Based on our model, $p(\hat\beta_j|\pi,g,\hat s) = \sum_{k=1}^K\pi_k\prod_{r=1}^R(g_{kr}*N_{jr})(\hat\beta_{jr})$. The distribution for unit $j$ under study $r$ is $p(\hat\beta_{jr}|\pi,g,\hat s) = \sum_{k=1}^K\pi_k(g_{kr}*N_{jr})(\hat\beta_{jr})$. It is clear that $p(\hat\beta_j|\pi,g,\hat s) \neq \prod_{r=1}^Rp(\hat\beta_{jr}|\pi,g,\hat s)$, so different studies are dependent. 
+\vspace{4mm}\noindent Actually, model (\ref{eq:4}) is the extension of the original \emph{Cormotif}: set $L=1$ and assume for any fixed $r$, $\hat s_{jr}^2$s are identical for all $j$, (\ref{eq:4}) is just \emph{Cormotif} model under Normal distribution. The difference here is that by using a larger $L$ we obtain more flexible models than \emph{Cormotif}. Similar to \emph{Cormotif}, our model can capture the dependence among multiple studies. To see this, consider the likelihood for unit $j$. Based on our model, $p(\hat\beta_j|\pi,g,\hat s) = \sum_{k=1}^K\pi_k\prod_{r=1}^R(g_{kr}*N_{jr})(\hat\beta_{jr})$. The distribution for unit $j$ under study $r$ is $p(\hat\beta_{jr}|\pi,g,\hat s) = \sum_{k=1}^K\pi_k(g_{kr}*N_{jr})(\hat\beta_{jr})$. It is clear that $p(\hat\beta_j|\pi,g,\hat s) \neq \prod_{r=1}^Rp(\hat\beta_{jr}|\pi,g,\hat s)$, so different studies are dependent. Compared with \emph{Cormotif}, another advantage of our generic model is its focus on both testing for significant effects and estimating the effect sizes, which are realized by computing the posterior distribution of effect $\beta_{jr}$, $p(\beta_{jr}|\hat\beta,\hat s,\pi,g) $. 
 
-When setting $K =1$, our model is equivalent to applying {\tt ash} \cite{ash} to each study separately. The advantage of our model is that it allows correlations among studies. This advantage leads to higher accuracy for effect estimation in multiple studies. 
+\vspace{4mm}\noindent When setting $K =1$, our model is equivalent to applying \emph{ash} \cite{Stephens2017} to each study separately. Compared with \emph{ash}, our model allows dependence among studies. As we show in Simulation, this advantage improves both effect estimation and detection of significant effects in multiple studies. 
 
-Another advantage of our generic model is that we could estimate the posterior distribution for effects $\beta_{jr}$, that is $p(\beta_{jr}|\hat\beta,\hat s,\pi,g) $. 
-%By Bayes theorem, we have
-%\begin{equation}
-%    p(\beta_{jr}|\hat\beta_{jr},\hat s_{jr}) \propto p(\beta_{jr}|\hat s_{jr})p(\hat\beta_{jr}|\beta_{jr},\hat s_{jr})
-%    \label{eq:5}
-%\end{equation}
+%
+%\vspace{4mm}\noindent The model has several additional assumptions can be relaxed, specifically,
+%\begin{enumerate}
+%\item In (\ref{eq:2}) we assume $g_{kr}$ is symmetric about 0. We can release the setting by using mixtures of uniforms. In this way, $g_{kr}$ can approximate any unimodal distribution. 
+%\item The normal distribution in (\ref{eq:4}) can be generalized to a t distribution. 
+%\end{enumerate}
 
+\vspace{5mm}
 \subsection{Fitting the model}
 
-Our method involves three steps:
+\vspace{4mm} Our method involves two steps:
 \begin{enumerate}
-    \item For a given $K$, estimate the parameters $\pi$ and $g$ by maximizing the likelihood $L(\pi,g)$, given by (\ref{eq:4}), denote as $\hat\pi$ and $\hat g$.
-    \item Choose the best $K$ by minimizing the Bayesian Information Criterion (BIC).
-    \item Compute, for each $j$ and $r$, the posterior distribution $p(\beta_{jr}|\hat\beta,\hat s,\hat\pi,\hat g)$.
+    \item For a large enough $K$, estimate the parameters $\pi$ and $g$ by maximizing the likelihood $L(\pi,g)$, given by (\ref{eq:4}), denote as $\hat\pi$ and $\hat g$.
+    \item Compute, for each $j$ and $r$, the posterior distribution $p(\beta_{jr}|\hat\beta,\hat s,\hat\pi,\hat g)$. 
 \end{enumerate}
+All the details can be found in Implementation Details. For Step 1, we  have totally $K\times R\times L+K-1$ parameters to estimate. We apply an EM algorithm to solve it (Alternatively interior point (IP) method \cite{Koenker2014} can be applied here as well). The conditional distributions $p(\beta_{jr}|\hat\beta,\hat s,\hat\pi,\hat g)$ in Step 2 are analytically available, each a mixture of a point mass on zero and $L$ normal distribution. With the posterior distributions for the effect, one can estimate the effect size by $E(\beta_{jr}|\hat\beta,\hat s,\hat\pi,\hat g)$ and test for non-zero effects. 
 
-All the details can be found in Section (\ref{sec:detail}). For Step 1 we apply an EM algorithm to solve it. Step 2 is straightforward. The conditional distributions $p(\beta_{jr}|\hat\beta,\hat s,\hat\pi,\hat g)$ in Step 3 are analytically available, each a mixture of a point mass on zero and $L$ normal distribution. 
-
+\vspace{5mm}
 \subsection{Local False Sign Rate}
 
-To measure "significance" of an effect $\beta_{jr}$ we use the local false sign rate ($\lfsr$), which is defined as:
+\vspace{4mm} To measure ``significance" of an effect $\beta_{jr}$ we use the local false sign rate ($\lfsr$) \cite{Stephens2017}, which is defined as:
 \begin{equation}
-    \lfsr_{jr} := \min\{p(\beta_{jr}\geq 0|\hat\beta,\hat s,\hat\pi,\hat g), p(\beta_{jr}\leq 0|\hat\beta,\hat s,\hat\pi,\hat g)\}
+    \lfsr_{jr} := \min\{p(\beta_{jr}\geq 0|\hat\beta,\hat s,\hat\pi,\hat g), p(\beta_{jr}\leq 0|\hat\beta,\hat s,\hat\pi,\hat g)\}.
+\label{eq:lfsr}
 \end{equation}
 
-Intuitively, $\lfsr_{jr}$ is the probability that we would get the sign of effect $\beta_{jr}$ incorrect if we were to use our best guess of the sign. Therefore, a small $\lfsr$ indicates high confidence in determining the sign of an effect. Notice that $\lfsr$ is more conservative than the local false discovery rate ($\lfdr$), since we can infer $\lfsr_{jr}\geq\lfdr_{jr}$ from the definition. 
+\vspace{4mm}\noindent Intuitively, $\lfsr_{jr}$ is the probability that we would get the sign of effect $\beta_{jr}$ incorrect if we were to use our best guess of the sign. Therefore, a small $\lfsr$ indicates high confidence in determining the sign of an effect. Notice that $\lfsr$ is more conservative than the local false discovery rate ($\lfdr$) since $\lfsr_{jr}\geq\lfdr_{jr}$. 
 
-\section{Detailed Method}
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Simulation} 
+%%%%%%%%%%%%%%%%%%%%%%%%
 
+\begin{figure}
+\begin{subfigure}{0.5\textwidth}
+\centering\includegraphics[width=3in]{./figures/pa3.png}
+    \caption{True pattern} 
+\label{fig:pa3}
+\end{subfigure}
+\begin{subfigure}{0.5\textwidth}
+\centering\includegraphics[width=3in]{./figures/pattern3.png}
+    \caption{Estimated pattern} \label{fig:pattern3}
+\end{subfigure}
+\caption{Patterns learned in Simulation 1 (constant precision, $\hat s_{jr}=1$).} \label{fig:pat3}
+\end{figure}
+
+\begin{figure}
+\begin{subfigure}{0.5\textwidth}
+\centering\includegraphics[width=3in]{./figures/llik3.png}
+    \caption{Log likelihood function for different $K$} 
+\label{fig:llik3}
+\end{subfigure}
+\begin{subfigure}{0.5\textwidth}
+\centering\includegraphics[width=3in]{./figures/RRMSE3.png}
+    \caption{Accuracy of effect estimates (RRMSE)} \label{fig:rrmse3}
+\end{subfigure}
+\begin{subfigure}{0.5\textwidth}
+\centering\includegraphics[width=3in]{./figures/lfsr3.png}
+    \caption{$\lfsr$ for the first study} \label{fig:lfsr3}
+\end{subfigure}
+\begin{subfigure}{0.5\textwidth}
+\centering\includegraphics[width=3in]{./figures/ROC3.png}
+    \caption{Detection of non-null effects (ROC curves)} \label{fig:roc3}
+\end{subfigure}
+\caption{Results for Simulation 1 } \label{fig:sim3}
+\end{figure}
+
+\vspace{5mm}
+\subsection{Estimation of patterns}
+
+\vspace{4mm} When set $K=1$ in our model, our model is equivalent to applying \emph{ash} to each study separately. For comparison, we would like to check the performance for $K=1$ and $K\geq 2$ separately. The increase in the performance can be viewed as the gain by considering the correlation among studies.
+
+\vspace{4mm}\noindent In simulation 1, we set unit number $n = 10000$, and study number $R = 8$. Assume every observation has the same standard error, $s_{jr}=1$. That is, $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 10000 units come from 5 patterns ($K=5$): 8000 units have zero effects in all four studies, that is $\beta_{jr}=0$, for all $r = 1,2,3,4,5,6,7,8$; 500 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1,2,3,4$ and $\beta_{jr}=0$ for $r =5, 6,7,8$; 500 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =5, 6,7,8$ and $\beta_{jr}=0$ for $r = 1,2,3,4$; 500 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =3,4,5,6$ and $\beta_{jr}=0$ for $r = 1,2,7,8$; 500 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1,2,3,4,5,6,7,8$. 
+
+\vspace{4mm}\noindent Figure \ref{fig:pa3} shows the true patterns and its frequencies. In the left plot, the value in $k$-th row and $r$-th column is $p(\beta_{jr}\neq 0|z_j=k,g)=1-w_0^{kr}$. The right plot shows the frequencies of each pattern. For estimation, we set $K=5$ and the estimated patterns are displayed in Figure \ref{fig:pattern3}. The estimated pattern are very similar to the true underlying differential patterns in Figure \ref{fig:pa3}. 
+
+\vspace{5mm}
+\subsection{Improved effect size estimates}
+
+\vspace{4mm}\noindent We fit our model for $K$ increasing from 1 to 10. Since our model is nested for $K$ (for larger $K$, we can always set some $\pi_k$ to be zero and get the same log likelihood function), the log likelihood function for larger $K$ is no less than smaller ones. Figure \ref{fig:llik3} shows the log likelihood function in (\ref{eq:4}) for different $K$. The log likelihood function has a non-decreasing trend. From $K=1$ to $2$, the log likelihood function has the most significant increase. And for $K\geq 5$, the log likelihood function remains approximately constant. The increasing trend shows that our hierarchical model fits better than applying {\tt ash} independently across studies (K=1). Then trend of log likelihood values after $K=5$ is due to that only five $\hat\pi_k$ get significant non-zeros values, while all others are estimated to be almost zeros. 
+
+\vspace{4mm}\noindent Figure \ref{fig:rrmse3} compares the accuracy of effect size estimates by relative root mean squared error (RRMSE). Denote estimates for $\beta_{jr}$ is $\tilde\beta_{jr}$ by our method. The RRMSE for estimates $\tilde\beta_{jr}$ is computed as 
+\begin{equation}
+\textrm{RRMSE} = \frac{\sqrt{\frac{1}{NR}\sum_{j=1}^N\sum_{r=1}^R(\tilde\beta_{jr}-\beta_{jr})}}{\sqrt{\frac{1}{NR}\sum_{j=1}^N\sum_{r=1}^R(\hat\beta_{jr}-\beta_{jr})}}, 
+\end{equation}
+which is the RMSE of estimates $\tilde\beta_{jr}$ divided by the RMSE achieved by simply using the original observed estimates $\hat\beta_{jr}$. Therefore, RRMSE less than 1 indicates that the estimates is more accurate than original observation  $\hat\beta_{jr}$. From Figure \ref{fig:rrmse3}, we can find that even $K=1$ gives approximate 0.5 RRMSE. In addition, the RRMSE has a decline trend as $K$ increases and reaches approximate constance for $K\geq 5$. Compared with \emph{ash} ($K=1$), our method has a substantial improvement in accuracy for large enough $K$. 
+
+\vspace{5mm}
+\subsection{Improved detection of significant effects}
+
+\vspace{4mm} In addition to effect estimates, our method also provides a measure of significance for each effect by \lfsr defined in (\ref{eq:lfsr}). We used the same simulation as above to illustrate the gains in power to detect significant effects coming from our method. Figure \ref{fig:lfsr3} shows the $\lfsr$ values computed by our method. The black dot represent the estimated $\lfsr$ in the first study for $K=5$. Notice that in the first study, we only set the first 1000 units to own significant effects ($\beta_{jr}\sim N(0,4^2)$) out of totally 10000 units. For the first 1000 units, the estimated $\lfsr$ tend to gather to 0, which means we are confident that they are nonzero. The following units have $\lfsr$ gathering at 1, which means they have zero effects. The red line shows the negative absolutely values of the differences of $\lfsr$ between $K=5$ and $K=10$. Except for the first 2000 units, the differences are very small in each unit, and almost all differences are less than 0.1. This again illustrate that large enough $K$ will give similar results as the exact one. 
+
+\vspace{4mm}\noindent Figure \ref{fig:roc3} shows the trade-off between false positive and true positive discoveries for different $K$ (ROC curves). The True Positive Rate and False Positive Rate are computed at any given threshold $\gamma$ as
+\begin{eqnarray}
+\textmd{True Positive Rate} &:=& \frac{|CS\cap S|}{|T|}\\
+\textmd{False Positive Rate} &:=& \frac{|N\cap S|}{|N|}
+\end{eqnarray}
+where $S$ is the set of significant effects at threshold $\gamma$, $CS$ is the set of correctly signed effects, $T$ is the set of true (non-zeros) effects and $N$ is the set of null (zero) effects:
+\begin{eqnarray}
+S &:=& \{(j,r)|\lfsr_{jr}\leq\gamma \}\\
+CS &:=& \{(j,r)|E(\beta_{jr}|D)\times\beta_{jr}>0\}\\
+N &:=& \{(j,r)|\beta_{jr}=0 \}\\
+T &:=& \{(j,r)|\beta_{jr}\neq 0 \}
+\end{eqnarray}
+A true positive needs to be correctly signed, not only significant. The performance precisely mirrors the RRMSE results: our method outperforms \emph{ash} and the performance is similar for large enough $K$. 
+
+\vspace{4mm}\noindent Using a similar approach, we performed simulations 2, which involved different study number and differential expression patterns, see Appendix Figure \ref{fig:sim2}. The conclusion is similar to simulation 1. 
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Detailed Method} 
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\vspace{5mm}
 \subsection{Embellishments}
 
+\vspace{4mm} We can extend $g_{kr}$ in (\ref{eq:2}) to other symmetric or even asymmetric unimodal distributions. For a more general case, suppose
+\begin{equation}
+g_{kr}(\cdot;w) = \sum_{l=0}^L w_l^{kr}f_l(\cdot),
+\label{eq:geng}
+\end{equation}
+where $f_0$ is a point mass at 0, and $f_l$ $(l=1,\ldots,L)$ are component distribution with one of the following forms:
+\begin{enumerate}[(i)]
+\item $f_l(\cdot) = N(\cdot; 0, \sigma^2_l)$,
+\item $f_l(\cdot) = U[\cdot; -a_l,a_l]$,
+\item $f_l(\cdot) = U[\cdot; -a_l,0] \text{ and/or } U[\cdot; 0,a_l]$,
+\end{enumerate}
+where $U[\cdot; a,b]$ denotes the density of a uniform distribution on $[a,b]$. Actually, with dense enough $a_l$, (iii) can approximate any unimodal distribution about 0. To better approximate the unimodal distribution, larger $K$ should be better. However in practice, a moderate $K$ can provide reasonable performance. The detailed method for estimating $\sigma_l^2$ and $a_l$ form data can be found in the Implementation Details in \cite{Stephens2017}. 
+
+\vspace{5mm}
 \subsection{Implementation Details} \label{sec:detail}
 
+\vspace{5mm}
+\subsubsection{Likelihood}
+
+\vspace{4mm} Using the prior $\beta_{jr}|z_j=k \sim \sum_{l=0}^L w_l^{kr}f_l(\beta_{jr})$ given by (\ref{eq:geng}) and the normal likelihood in (\ref{eq:3}), integrating over $\beta_{jr}$ yields
+\begin{equation}
+p(\hat\beta_{jr}|z_j=k,\pi,g,\hat s) = \sum_{l=0}^L w_l^{kr}\tilde f_l(\hat\beta_{jr}),
+\end{equation}
+where
+\begin{equation}
+     \tilde f_{l}(\hat\beta_{jr}) := \int f_l(\beta_{jr})N(\hat\beta_{jr};\beta_{jr},\hat s_{jr})d\beta_{jr},
+\end{equation}
+denotes the likelihood of $\hat\beta_{jr}$ if the prior of $\beta_{jr}$ follows $f_l(\beta_{jr})$. 
+
+\vspace{4mm}\noindent These convolutions are straightforward to evaluate when $f_l$ is a normal or uniform density. Specifically, 
+\begin{equation} \label{eqn:uconv}
+\tilde{f}_l(\hat\beta_{jr})  = 
+\begin{cases}
+N(\hat\beta_{jr};0, \hat s_{jr}^2 +  \sigma_l^2) & \text{if $f_l(\cdot) = N(\cdot; 0, \sigma_l^2)$}, \\
+\frac{\Phi((\hat\beta_{jr}-a_l)/\hat s_{jr}) - \Phi((\hat\beta_{jr}-b_l)/\hat s_{jr})}{b_l-a_l} & \text{if $f_l(\cdot) = U(\cdot; a_l,b_l)$},
+\end{cases}
+\end{equation}
+where $\Phi$ denotes the cumulative distribution function (c.d.f.) of the standard normal distribution.
+
+\vspace{5mm}
 \subsubsection{Optimization}
-This section We presents the EM algorithm used to estimate both $\pi$ and $g$. First compute the log likelihood function for $\hat\beta$ and group label $z=(z_1,\ldots,z_n)'$:
+
+\vspace{4mm}\noindent  This section We presents the EM algorithm used to estimate both $\pi$ and $g$. First compute the log likelihood function for $\hat\beta$ and group label $z=(z_1,\ldots,z_n)'$:
 \begin{eqnarray}
     &&\log p(\hat\beta,z|\pi,g,\hat s) = \sum_{j=1}^n\log p(\hat\beta_j|z_j,\pi,g,\hat s)+\sum_{j=1}^n\log p(z_j|\pi) \nonumber\\
     &=& \sum_{j=1}^n\sum_{k=1}^K\mathbb{I}(z_j=k)\log p(\hat\beta_j|z_j=k,\pi,g,\hat s)
     +\sum_{j=1}^n\sum_{k=1}^K\mathbb{I}(z_j=k)\log p(z_j=k|\pi)\nonumber\\
-    &=& \sum_{j=1}^n\sum_{k=1}^K\mathbb{I}(z_j=k)\sum_{r=1}^R\log \left[(g_{kr}*N_{jr})(\hat\beta_{jr}) \right]+\sum_{j=1}^n\sum_{k=1}^K\mathbb{I}(z_j=k)\log\pi_k.
+    &=& \sum_{j=1}^n\sum_{k=1}^K\mathbb{I}(z_j=k)\sum_{r=1}^R\log \left[p(\hat\beta_{jr}|z_j=k,\pi,g,\hat s) \right]+\sum_{j=1}^n\sum_{k=1}^K\mathbb{I}(z_j=k)\log\pi_k.
 \end{eqnarray}
-
 Here $z$ is a latent variable. The EM algorithm seeks to find the MLE of the marginal likelihood (\ref{eq:4}) by iteratively applying the E-step and the M-step.
 
-In the E-step, one evaluates the $Q$-function $Q(\pi,g|\pi^{(t)},g^{(t)})$, here $(\pi^{(t)},g^{(t)})$ is the current estimation. We have
+\vspace{4mm}\noindent In the E-step, one evaluates the $Q$-function $Q(\pi,g|\pi^{(t)},g^{(t)})$, here $(\pi^{(t)},g^{(t)})$ is the current estimation. We have
 \begin{eqnarray}
     &&Q(\pi,g|\pi^{(t)},g^{(t)}) = E_{z|\hat\beta,\hat s,\pi^{(t)},g^{(t)}}\left[\log p(\hat\beta,z|\pi,g,\hat s)\right]\nonumber\\
-    &=&\sum_{j=1}^n\sum_{k=1}^K\sum_{r=1}^Rp_{jk}\log \left[(g_{kr}*N_{jr})(\hat\beta_{jr}) \right]+\sum_{j=1}^n\sum_{k=1}^Kp_{jk}\log\pi_k,
+    &=&\sum_{j=1}^n\sum_{k=1}^K\sum_{r=1}^Rp_{jk}\log \left[p(\hat\beta_{jr}|z_j=k,\pi,g,\hat s)\right]+\sum_{j=1}^n\sum_{k=1}^Kp_{jk}\log\pi_k,
 \label{eq:Q}
 \end{eqnarray}
 where we denote
 \begin{eqnarray}
     p_{jk}&=&E_{z|\hat\beta,\hat s,\pi^{(t)},g^{(t)}}[\mathbb{I}(z_j=k)]=p(z_j=k|\hat\beta_j,\hat s,\pi^{(t)},g^{(t)})\nonumber\\
     &=& \frac{p(\hat\beta_j,z_j=k|\hat s,\pi^{(t)},g^{(t)})}{p(\hat\beta_j|\hat s,\pi^{(t)},g^{(t)})}\nonumber\\
-    &=& \frac{\pi_k^{(t)}\prod_{r=1}^R(g_{kr}^{(t)}*N_{jr})(\hat\beta_{jr})}{\sum_{k'=1}^K\pi_{k'}^{(t)}\prod_{r=1}^R(g_{k'r}^{(t)}*N_{jr})(\hat\beta_{jr})}
+    &=& \frac{\pi_k^{(t)}\prod_{r=1}^Rp(\hat\beta_{jr}|z_j=k,\pi^{(t)},g^{(t)},\hat s)}{\sum_{k'=1}^K\pi_{k'}^{(t)}\prod_{r=1}^Rp(\hat\beta_{jr}|z_j=k,\pi^{(t)},g^{(t)},\hat s)}
 \end{eqnarray}
 
-In the M-step, one finds $\pi$ and $g$ that maximize the $Q$-function $Q(\pi,g|\pi^{(t)},g^{(t)})$, and denote them as $\pi^{(t+1)}$ and $g^{(t+1)}$, that is 
+
+\vspace{4mm}\noindent In the M-step, one finds $\pi$ and $g$ that maximize the $Q$-function $Q(\pi,g|\pi^{(t)},g^{(t)})$, and denote them as $\pi^{(t+1)}$ and $g^{(t+1)}$, that is 
 \begin{equation}
 (\pi^{(t+1)}, g^ {(t+1)}) =\argmax_{(\pi,g)} Q(\pi,g|\pi^{(t)},g^{(t)}).
 \end{equation}
@@ -149,39 +342,17 @@ For $\pi^{(t+1)}$, we could optimize it from (\ref{eq:Q}) directly and get
     \pi_k^{(t+1)} = \frac{1}{n} \sum_{j=1}^n p_{jk}.
 \end{equation}
 Notice in (\ref{eq:Q}), we could separately optimize $g_{kr}$ for fixed $k$ and $r$, that is 
-\begin{equation}
-    g_{kr}^ {(t+1)}=\argmax_{g_{kr}}\sum_{j=1}^np_{jk}\log \left[(g_{kr}*N_{jr})(\hat\beta_{jr}) \right].
-\label{eq:g_kr}
-\end{equation}
-Optimizing (\ref{eq:g_kr}) is a convex problem, which we solve using an EM algorithm, accelerated using R package {\tt SQUAREM} .
-
-\subsubsection{Model Selection: Bayesian Information Criterion}
-
-To determine the class number of $K$ , we use Bayesian Information Criterion(BIC). The BIC in our setting is written as 
 \begin{eqnarray}
-{\rm BIC}(K) &=& -2\log p(\hat\beta|\pi,g,\hat s) + (K\times R\times L+K-1)\times \log n \nonumber \\
-&=& -2 \sum_{j=1}^n\log\left[\sum_{k=1}^K\pi_k\prod_{r=1}^R(g_{kr}*N_{jr})(\hat\beta_{jr})\right] \nonumber\\
-&+& (K\times R\times L+K-1)\times \log n.
+    g_{kr}^ {(t+1)}&=&\argmax_{g_{kr}}\sum_{j=1}^np_{jk}\log \left[p(\hat\beta_{jr}|z_j=k,\pi,g,\hat s) \right] \nonumber \\
+ &=&\argmax_{w^{kr}}\sum_{j=1}^np_{jk}\log\left[\sum_{l=0}^L w_l^{kr}\tilde f_l(\hat\beta_{jr}) \right].
+\label{eq:g_kr}
 \end{eqnarray}
-Here $K-1$ is the number of parameters for $\pi$, $K\times R\times L$ is the number of parameters involved in $g$ and $n$ is the unit number. We choose the K with the smallest BIC, that is 
-\begin{equation}
-\hat K = \argmin_{K\geq1} {\rm BIC}(K).
-\end{equation}
+Optimizing (\ref{eq:g_kr}) is a convex problem, which we solve using an EM algorithm, accelerated using R package {\tt SQUAREM}. A simple interior point (IP) methods could also be applied here using R package {\tt REBayes}. 
 
+\vspace{5mm}
 \subsubsection{Posterior distribution}
 
-For a more general case, suppose
-\begin{equation}
-g_{kr}(\cdot;w) = \sum_{l=0}^L w_l^{kr}f_l(\cdot),
-\label{eq:geng}
-\end{equation}
-Denote 
-\begin{equation}
-     \tilde f_{l}(\hat\beta_{jr}) := \int f_l(\beta_{jr})p(\hat\beta_{jr}|\beta_{jr},\hat s_{jr})d\beta_{jr},
-\end{equation}
-as the likelihood of $\hat\beta_{jr}$ if the prior of $\beta_{jr}$ follows $f_l(\beta_{jr})$. 
-
-By Bayes theorem, 
+\vspace{4mm} By Bayes theorem, 
 \begin{eqnarray}
 &&p(\beta_{jr}|\hat\beta,\hat s,\pi, g) = p(\beta_{jr}|\hat\beta_{j},\hat s_j,\pi, g)\nonumber \\
 &=& \sum_{k=1}^Kp(\beta_{jr}|\hat\beta_{j},\hat s_j,\pi,g,z_j=k)p(z_j=k|\hat\beta_{j},\hat s_j,\pi, g) \nonumber\\
@@ -192,40 +363,52 @@ By Bayes theorem,
 \end{eqnarray}
 Here the posterior mixture component $h_l$ is the posterior on $\beta_{jr}$ that would be obtained using prior $f_l(\beta_{jr})$ and likelihood $p(\hat\beta_{jr}|\beta_{jr},\hat s_{jr})$, and the mixture weights $\theta_{ljr}$ is
 \begin{equation}
-     \theta_{ljr} = \sum_{k=1}^K\frac{w_{l}^{kr}\tilde f_{l}(\hat\beta_{jr})p_{jk}}{\sum_{l'=0}^L\eta_{l'r}\tilde f_{l'}(\hat\beta_{jr})}.
+     \theta_{ljr} = \sum_{k=1}^K\frac{w_{l}^{kr}\tilde f_{l}(\hat\beta_{jr})p_{jk}}{\sum_{l'=0}^Lw_{l'}^{kr}\tilde f_{l'}(\hat\beta_{jr})}.
 \end{equation}
 
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusions}
+%%%%%%%%%%%%%%%%%%%%%%%%
 
-% where $f_0$ is a point mass on 0. Then we have 
-% \begin{equation}
-%     p(\beta_{jr}|\pi,g,\hat s) = \sum_{k=1}^K\pi_k g_{kr}(\beta_{jr})=  \sum_{k=1}^K\pi_k\sum_{l=0}^Lw_l^{kr}f_l(\beta_{jr})
-%     = \sum_{l=0}^L\eta_{lr}f_l(\beta_{jr}),
-% \end{equation}
-% where $\eta_{lr}=\sum_{k=1}^K\pi_kw_l^{kr}$. Thus, by (\ref{eq:5}), we get
-% \begin{equation}
-%     p(\beta_{jr}|\hat\beta_{jr},\hat s_{jr},\pi, g) = \sum_{l=0}^L\theta_{ljr}p_{l}(\beta_{jr}|\hat\beta_{jr},\hat s_{jr}).
-% \end{equation}
-% The posterior mixture component $p_l$ is the posterior on $\beta_{jr}$ that would be obtained using prior $f_l(\beta_{jr})$ and likelihood $p(\hat\beta_{jr}|\beta_{jr},\hat s_{jr})$. To compute the mixture weights $\theta_{ljr}$, denote
-% \begin{equation}
-%     \tilde f_{ljr}(\hat\beta_{jr}) := \int f_l(\beta_{jr})p(\hat\beta_{jr}|\beta_{jr},\hat s_{jr})d\beta_{jr},
-% \end{equation}
-% the convolution of $f_l$ and a density function. Then $\theta_{ljr}$ can be obtained from
-% \begin{equation}
-%     \theta_{ljr} = \frac{\eta_{lr}\tilde f_{ljr}(\hat\beta_{jr})}{\sum_{l'=0}^L\eta_{l'r}\tilde f_{l'} (\hat\beta_{jr})}.
-% \end{equation}
+\vspace{4mm} In this paper, we introduce an Empirical Bayesian method for jointly analyzing differential gene expression in multiple studies. To capture the dependence among different studies, we introduce a small number of latent patterns for prior distributions of effect sizes. Our approach focus on both estimation of effect sizes and testing for significant effects. Simulation results show that our method outperforms the single study approach \emph{ash} in both effect-size estimation and detecting significant effects. In addition, in simple settings our approach can accurately estimate the true patterns in the data.
 
-\begin{thebibliography}{99}
+\newpage
 
-\bibitem{cormotif} 
-Wei, Y. and Ji, H. (2014). Joint analysis of differential gene expression in multiple studies using correlation motif. {\it Biostatistics}, doi:10.1093/biostatistics/
-kxu038.
+\begin{appendix}
+\section{Appendix}
 
-\bibitem{ash} 
-Stephens, M. (2016). False discovery rate: A new deal. {\it Biostatistics} 18 (2): 275-294
+\begin{figure}[ht]
+\begin{subfigure}{0.5\textwidth}
+\centering\includegraphics[width=3in]{./figures/llik2.png}
+    \caption{Log likelihood function for different $K$} 
+\label{fig:llik2}
+\end{subfigure}
+\begin{subfigure}{0.5\textwidth}
+\centering\includegraphics[width=3in]{./figures/RRMSE2.png}
+    \caption{Accuracy of effect estimates (RRMSE)} \label{fig:rrmse2}
+\end{subfigure}
+\begin{subfigure}{0.5\textwidth}
+\centering\includegraphics[width=3in]{./figures/lfsr2.png}
+    \caption{$\lfsr$ for the first study} \label{fig:lfsr2}
+\end{subfigure}
+\begin{subfigure}{0.5\textwidth}
+\centering\includegraphics[width=3in]{./figures/ROC2.png}
+    \caption{Detection of non-null effects (ROC curves)} \label{fig:roc2}
+\end{subfigure}
+\caption{Results for Simulation 2 (constant precision, $\hat s_{jr}=1$).} 
+\medskip
+\small
+Note: In simulation 2, we set unit number $n = 10000$, and study number $R = 4$. Assume every observation has the same standard error $\hat s_{jr}=1$. That is, $\hat\beta_{jr}|\beta_{jr}\sim N(\beta_{jr};0,1)$. The 10000 units come from 4 patterns ($K=4$): 9100 units have zero effects in all four studies, that is $\beta_{jr}=0$, for $r = 1,2,3,4$; 300 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1, 2$ and $\beta_{jr}=0$ for $r =3, 4$; 300 units have effect $\beta_{jr}\sim N(0,4^2)$ for $r =3, 4$ and $\beta_{jr}=0$ for $r = 1, 2$; 300 unitss have effect $\beta_{jr}\sim N(0,4^2)$ for $r =1,2,3,4$.
+\label{fig:sim2}
+\end{figure}
 
-\bibitem{mash}
-Urbut, S.M., Wang, G. and Stephens, M. (2017). Flexible statistical methods for estimating and testing effects in genomic studies with multiple conditions. {\it bioRxiv}, doi:10.1101/096552.
 
-\end{thebibliography}
+\end{appendix}
+
+\newpage
+
+\bibliographystyle{apalike}
+\bibliography{Motif.bib}
 
 \end{document}
