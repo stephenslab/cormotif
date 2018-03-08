@@ -1,5 +1,5 @@
 ---
-title: "Simulation in Paper"
+title: "Simulation in Paper2"
 author: "Zhiwei Ma"
 date: 2018-01-28
 output: html_document
@@ -38,7 +38,7 @@ We set unit number $n = 10000$, and study number $R = 4$. We set every observati
 
 To fit the model, set $K = 1:10$.
 
-```{r}
+```{r,cache=TRUE}
 source('../code/function.R')
 K = 4
 D = 4
