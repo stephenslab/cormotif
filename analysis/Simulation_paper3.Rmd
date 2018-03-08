@@ -38,7 +38,7 @@ We set unit number $n = 10000$, and study number $R = 8$. We set every observati
 
 To fit the model, set $K = 1:10$.
 
-```{r,cache=TRUE}
+```{r}
 source('../code/function.R')
 K = 5
 D = 8

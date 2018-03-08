@@ -1,5 +1,5 @@
 library("SQUAREM")
-library("REBayes")
+#library("REBayes")
 
 source('../code/lik.R')
 source('../code/set_data.R')
